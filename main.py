@@ -3,6 +3,7 @@ from discord import app_commands
 import json
 import time
 import re
+import asyncio
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
@@ -28,6 +29,21 @@ async def togglefixer(interaction):
 async def on_app_command_error(interaction, error):
     if isinstance(error, app_commands.MissingPermissions):
         await interaction.response.send_message("You dont have permissions to do this!", ephemeral=True)
+    
+@client.event
+async def on_message(message):
+    if message.author == client.user:
+        return
+    if not config["enabled"]:
+        return
+    PATTERN = r'https?://(?:www\.)?(?:twitter\.com|x\.com)/([^/]+)/status/(\d+)(?:/photo/\d)?'
+    REPLACEMENT = r'https://vxtwitter.com/\1/status/\2'
+    result = re.sub(PATTERN, REPLACEMENT, message.content)
+    if result != message.content:
+        print("Match found")
+        await message.reply(f"<@{message.author.id}>: {result}")
+        await asyncio.sleep(1e-3)
+        await message.delete()
     
 @tree.command(name= "shutdown", description = "turns off the bot!")
 @app_commands.checks.has_permissions(administrator=True)
