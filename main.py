@@ -15,6 +15,12 @@ def currentTime():
 with open("config.json", "r") as file:
     config = json.load(file)
     
+if config["firstRun"]:
+    print("Thank you for using my bot!\nTo enable the fixer use '/toggle' (admin perms required)")
+    config["firstRun"] = not config["firstRun"]
+    with open("config.json", "w") as f:
+        json.dump(config, f, indent=4)
+    
 @tree.command(
     name = "toggle",
     description = "This enables or disables the fixer")
