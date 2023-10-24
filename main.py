@@ -51,12 +51,17 @@ async def on_message(message):
     VXREPLACEMENT = r'https://vxtwitter.com/\1/status/\2'
     DDPATTERN = r'https?://(?:www\.)?instagram\.com\/reel\/([a-zA-Z0-9_-]+)(\/\?igshid=[a-zA-Z0-9_-]+)?'
     DDREPLACEMENT = r'https://ddinstagram.com/reel/\1\2'
+    TTPATTERN = r'https:\/\/(?:www\.)?tiktok\.com\/@([^\/]+)\/video\/(\d+)'
+    TTREPLACEMENT = r'https://vxtiktok.com/@\1/video/\2'
     vxresult = re.sub(VXPATTERN, VXREPLACEMENT, message.content)
     ddresult = re.sub(DDPATTERN, DDREPLACEMENT, message.content)
+    ttresult = re.sub(TTPATTERN, TTREPLACEMENT, message.content)
     if vxresult != message.content:
         await  match(vxresult)
     if ddresult != message.content:
         await match(ddresult)
+    if ttresult != message.content:
+        await match(ttresult)
     
 @tree.command(name= "shutdown", description = "turns off the bot!")
 @app_commands.checks.has_permissions(administrator=True)
