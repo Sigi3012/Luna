@@ -42,14 +42,21 @@ async def on_message(message):
         return
     if not config["enabled"]:
         return
-    PATTERN = r'https?://(?:www\.)?(?:twitter\.com|x\.com)/([^/]+)/status/(\d+)(?:/photo/\d)?'
-    REPLACEMENT = r'https://vxtwitter.com/\1/status/\2'
-    result = re.sub(PATTERN, REPLACEMENT, message.content)
-    if result != message.content:
+    async def match(result):
         print("Match found")
         await message.reply(f"<@{message.author.id}>: {result}")
         await asyncio.sleep(1e-3)
         await message.delete()
+    VXPATTERN = r'https?://(?:www\.)?(?:twitter\.com|x\.com)/([^/]+)/status/(\d+)(?:/photo/\d)?'
+    VXREPLACEMENT = r'https://vxtwitter.com/\1/status/\2'
+    DDPATTERN = r'https?://(?:www\.)?instagram\.com\/reel\/([a-zA-Z0-9_-]+)(\/\?igshid=[a-zA-Z0-9_-]+)?'
+    DDREPLACEMENT = r'https://ddinstagram.com/reel/\1\2'
+    vxresult = re.sub(VXPATTERN, VXREPLACEMENT, message.content)
+    ddresult = re.sub(DDPATTERN, DDREPLACEMENT, message.content)
+    if vxresult != message.content:
+        await  match(vxresult)
+    if ddresult != message.content:
+        await match(ddresult)
     
 @tree.command(name= "shutdown", description = "turns off the bot!")
 @app_commands.checks.has_permissions(administrator=True)
