@@ -44,7 +44,7 @@ async def on_message(message):
         return
     async def match(result):
         print("Match found")
-        await message.reply(f"<@{message.author.id}>: {result}")
+        await message.reply(f"<@{message.author.id}>: {result}", silent=True)
         await asyncio.sleep(1e-3)
         await message.delete()
     VXPATTERN = r'https?://(?:www\.)?(?:twitter\.com|x\.com)/([^/]+)/status/(\d+)(?:/photo/\d)?'
@@ -53,15 +53,11 @@ async def on_message(message):
     DDREPLACEMENT = r'https://ddinstagram.com/reel/\1\2'
     TTPATTERN = r'https:\/\/(?:www\.)?tiktok\.com\/@([^\/]+)\/video\/(\d+)'
     TTREPLACEMENT = r'https://vxtiktok.com/@\1/video/\2'
-    vxresult = re.sub(VXPATTERN, VXREPLACEMENT, message.content)
-    ddresult = re.sub(DDPATTERN, DDREPLACEMENT, message.content)
-    ttresult = re.sub(TTPATTERN, TTREPLACEMENT, message.content)
-    if vxresult != message.content:
-        await  match(vxresult)
-    if ddresult != message.content:
-        await match(ddresult)
-    if ttresult != message.content:
-        await match(ttresult)
+    endResult = re.sub(VXPATTERN, VXREPLACEMENT, message.content)
+    endResult = re.sub(DDPATTERN, DDREPLACEMENT, endResult)
+    endResult = re.sub(TTPATTERN, TTREPLACEMENT, endResult)
+    if endResult != message.content:
+        await match(endResult)
     
 @tree.command(name= "shutdown", description = "turns off the bot!")
 @app_commands.checks.has_permissions(administrator=True)
