@@ -1,5 +1,6 @@
 {
     "token": "yourtokenhere",
     "enabled": false,
-    "firstRun": true
+    "firstRun": true,
+    "admin": "your user id here (this controls the bot be careful!"
 }
