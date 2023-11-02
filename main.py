@@ -71,12 +71,15 @@ async def on_message(message):
     VMREPLACEMENT = r'https://vm.vxtiktok.com/\1'
     PXPATTERN = r'https:\/\/(?:www\.)?pixiv\.net\/(?:en\/)?(?:artworks|member_illust)\/(\d+)'
     PXREPLACEMENT = r'https://phixiv.net/artworks/\1'
+    RXPATTERN = r'https?:\/\/(?:www\.)?(reddit\.com)\/(.*)'
+    RXREPLACEMENT = r'https://rxddit.com/\2'
     
     endResult = re.sub(VXPATTERN, VXREPLACEMENT, message.content)
     endResult = re.sub(DDPATTERN, DDREPLACEMENT, endResult)
     endResult = re.sub(TTPATTERN, TTREPLACEMENT, endResult)
     endResult = re.sub(VMPATTERN, VMREPLACEMENT, endResult)
     endResult = re.sub(PXPATTERN, PXREPLACEMENT, endResult)
+    endResult = re.sub(RXPATTERN, RXREPLACEMENT, endResult)
     if endResult != message.content:
         await match(endResult)
     
