@@ -9,6 +9,22 @@ intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
 
+class Buttons(discord.ui.View):
+    def __init__(self, *, timeout=180):
+        super().__init__(timeout=timeout)
+
+    @discord.ui.button(emoji="\U0001F5D1", style=discord.ButtonStyle.red)
+    async def gray_button(self, interaction: discord.Interaction, button:discord.ui.Button):
+        message = interaction.message.content
+
+        # This takes the message sent by the bot and finds the id of the user who sent the original message
+        originalAuthorID = re.sub("[@<>:]", "", message).split(" ", 1)[0]
+        
+        if interaction.user.id != int(originalAuthorID):
+            await interaction.response.send_message("You are not the author of this message!", ephemeral=True)
+        else:
+            await interaction.message.delete()
+
 def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
 
@@ -57,7 +73,7 @@ async def on_message(message):
     
     async def match(result):
         print("Match found")
-        await message.reply(f"<@{message.author.id}>: {result}", silent=True)
+        await message.reply(f"<@{message.author.id}>: {result}", silent=True, view=Buttons())
         await asyncio.sleep(1e-3)
         await message.delete()
         
