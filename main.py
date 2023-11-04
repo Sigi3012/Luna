@@ -4,10 +4,19 @@ import json
 import time
 import re
 import asyncio
+import checks
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 tree = app_commands.CommandTree(client)
+
+with open("config.json", "r") as file:
+    config = json.load(file)
+
+checks.check()
+
+def currentTime():
+    return time.strftime("%H:%M:%S", time.localtime())
 
 class Buttons(discord.ui.View):
     def __init__(self, *, timeout=180):
@@ -24,32 +33,6 @@ class Buttons(discord.ui.View):
             await interaction.response.send_message("You are not the author of this message!", ephemeral=True)
         else:
             await interaction.message.delete()
-
-def currentTime():
-    return time.strftime("%H:%M:%S", time.localtime())
-
-async def missingPermissions(interaction):
-    await interaction.response.send_message("You dont have permissions to do this!", ephemeral=True)
-
-with open("config.json", "r") as file:
-    config = json.load(file)
-    
-if config["admin"] is not None:
-    try:
-        test = int(config["admin"])
-    except ValueError:
-        print("Please set a user ID in config.json and run the bot again.")
-        exit()
-
-if config["token"] == "yourtokenhere":
-    print("Please set your discord bot token in the config.json, to get your bot token go to the discord developer portal and select your app, then it is found in Bot > Token.")
-    exit()
-   
-if config["firstRun"]:
-    print("Thank you for using my bot!\nTo enable the fixer use '/toggle' (admin perms required)")
-    config["firstRun"] = not config["firstRun"]
-    with open("config.json", "w") as f:
-        json.dump(config, f, indent=4)
     
 @tree.command(
     name = "toggle",
@@ -62,7 +45,7 @@ async def togglefixer(interaction):
         await interaction.response.send_message(f"Toggled to {config['enabled']}", ephemeral=True)
         print(f"Toggled to: {config['enabled']}@{currentTime()}")
     else:
-        await missingPermissions(interaction)
+        await checks.missingPermissions(interaction)
     
 @client.event
 async def on_message(message):
@@ -106,7 +89,7 @@ async def shutdown(interaction):
         print(f"Bot offline@{currentTime()}")
         await client.close()
     else:
-        await missingPermissions(interaction)
+        await checks.missingPermissions(interaction)
 
 @client.event
 async def on_ready():
