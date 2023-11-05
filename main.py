@@ -28,12 +28,12 @@ class Buttons(discord.ui.View):
 
         # This takes the message sent by the bot and finds the id of the user who sent the original message
         originalAuthorID = re.sub("[@<>:]", "", message).split(" ", 1)[0]
-        
+
         if interaction.user.id != int(originalAuthorID):
             await interaction.response.send_message("You are not the author of this message!", ephemeral=True)
         else:
             await interaction.message.delete()
-    
+
 @tree.command(
     name = "toggle",
     description = "This enables or disables the fixer")
@@ -46,24 +46,26 @@ async def togglefixer(interaction):
         print(f"Toggled to: {config['enabled']}@{currentTime()}")
     else:
         await checks.missingPermissions(interaction)
-    
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
     if not config["enabled"]:
         return
-    
+
     async def match(result):
         print("Match found")
         await message.reply(f"<@{message.author.id}>: {result}", silent=True, view=Buttons())
         await asyncio.sleep(1e-3)
         await message.delete()
-        
+
     VXPATTERN = r'https?://(?:www\.)?(?:twitter\.com|x\.com)/([^/]+)/status/(\d+)(?:/photo/\d)?'
     VXREPLACEMENT = r'https://vxtwitter.com/\1/status/\2'
-    DDPATTERN = r'https?://(?:www\.)?instagram\.com\/reel\/([a-zA-Z0-9_-]+)(\/\?igshid=[a-zA-Z0-9_-]+)?'
-    DDREPLACEMENT = r'https://ddinstagram.com/reel/\1\2'
+    DDREELPATTERN = r'https?://(?:www\.)?instagram\.com\/reel\/([a-zA-Z0-9_-]+)(\/\?igshid=[a-zA-Z0-9_-]+)?'
+    DDREELREPLACEMENT = r'https://ddinstagram.com/reel/\1\2'
+    DDPOSTPATTERN= r'https://(?:www\.)?instagram\.com/p/([a-zA-Z0-9_-]+)(/\?utm_source=ig_web_copy_link)?'
+    DDPOSTREPLACEMENT = r'https://ddinstagram.com/p/\1'
     TTPATTERN = r'https:\/\/(?:www\.|vm\.)?tiktok\.com\/@([^\/]+)\/video\/(\d+)'
     TTREPLACEMENT = r'https://vxtiktok.com/@\1/video/\2'
     VMPATTERN = r'https:\/\/vm\.tiktok\.com\/([\[A-Za-z0-9]+)'
@@ -72,16 +74,17 @@ async def on_message(message):
     PXREPLACEMENT = r'https://phixiv.net/artworks/\1'
     RXPATTERN = r'https?:\/\/(?:www\.)?(reddit\.com)\/(.*)'
     RXREPLACEMENT = r'https://rxddit.com/\2'
-    
+
     endResult = re.sub(VXPATTERN, VXREPLACEMENT, message.content)
-    endResult = re.sub(DDPATTERN, DDREPLACEMENT, endResult)
+    endResult = re.sub(DDPOSTPATTERN, DDPOSTREPLACEMENT, endResult)
+    endResult = re.sub(DDREELPATTERN, DDREELREPLACEMENT, endResult)
     endResult = re.sub(TTPATTERN, TTREPLACEMENT, endResult)
     endResult = re.sub(VMPATTERN, VMREPLACEMENT, endResult)
     endResult = re.sub(PXPATTERN, PXREPLACEMENT, endResult)
     endResult = re.sub(RXPATTERN, RXREPLACEMENT, endResult)
     if endResult != message.content:
         await match(endResult)
-    
+
 @tree.command(name= "shutdown", description = "turns off the bot!")
 async def shutdown(interaction):
     if interaction.user.id == int(config["admin"]):
@@ -97,5 +100,5 @@ async def on_ready():
     print(f"Online!@{currentTime()}")
     print(f"Config loaded!@{currentTime()}")
 
-if __name__ == "__main__":    
+if __name__ == "__main__":
     client.run(config["token"])
