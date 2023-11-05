@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 import json
-import time
+import time, datetime
 import re
 import asyncio
 import checks
@@ -56,6 +56,9 @@ async def on_message(message):
 
     async def match(result):
         print("Match found")
+        config["totalFixed"] += 1
+        with open('config.json', 'w') as f:
+            json.dump(config, f, indent=4)
         await message.reply(f"<@{message.author.id}>: {result}", silent=True, view=Buttons())
         await asyncio.sleep(1e-3)
         await message.delete()
@@ -85,6 +88,23 @@ async def on_message(message):
     if endResult != message.content:
         await match(endResult)
 
+@tree.command(name = "status", description = "shows the status of the bot")
+async def status(interaction):
+    uptime = str(datetime.timedelta(seconds=int(round(time.time()-startUptime))))
+    def enabled():
+        if config["enabled"]:
+            return("\U0001F7E9")
+        else:
+            return("\U0001F7E5")
+    
+    embed = discord.Embed(
+        title="Status",
+        description=f"Enabled: {enabled()}\nTotal links fixed: {config['totalFixed']}\nUptime: {uptime}\nAdmin: <@{config['admin']}>",
+        colour=0x00b0f4,
+        timestamp=datetime.datetime.now())
+    embed.set_footer(text="Made by @.Sigi")
+    await interaction.response.send_message(embed=embed)
+
 @tree.command(name= "shutdown", description = "turns off the bot!")
 async def shutdown(interaction):
     if interaction.user.id == int(config["admin"]):
@@ -98,7 +118,8 @@ async def shutdown(interaction):
 async def on_ready():
     await tree.sync()
     print(f"Online!@{currentTime()}")
-    print(f"Config loaded!@{currentTime()}")
+    global startUptime
+    startUptime = time.time()
 
 if __name__ == "__main__":
     client.run(config["token"])
