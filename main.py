@@ -19,8 +19,13 @@ def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
 
 class Buttons(discord.ui.View):
-    def __init__(self, *, timeout=180):
+    def __init__(self, *, timeout=60):
         super().__init__(timeout=timeout)
+
+    async def on_timeout(self):
+        self.clear_items()
+        
+        await self.message.edit(view=self)
 
     @discord.ui.button(emoji="\U0001F5D1", style=discord.ButtonStyle.red)
     async def gray_button(self, interaction: discord.Interaction, button:discord.ui.Button):
@@ -59,7 +64,8 @@ async def on_message(message):
         config["totalFixed"] += 1
         with open('config.json', 'w') as f:
             json.dump(config, f, indent=4)
-        await message.reply(f"<@{message.author.id}>: {result}", silent=True, view=Buttons())
+        view = Buttons()
+        view.message = await message.reply(f"<@{message.author.id}>: {result}", silent=True, view=view)
         await asyncio.sleep(1e-3)
         await message.delete()
 
