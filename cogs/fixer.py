@@ -11,7 +11,7 @@ config = Config.getMainInstance()
 # --------- #
 
 class Buttons(discord.ui.View):
-    def __init__(self, *, timeout=60):
+    def __init__(self, *, timeout=config.timeoutTime):
         super().__init__(timeout=timeout)
 
     async def on_timeout(self):

@@ -36,6 +36,7 @@ class Config:
         self.enabled = data['enabled']
         self.firstRun = data['firstRun']
         self.totalFixed = data['totalFixed']
+        self.timeoutTime = data['timeoutTime']
 
     def save(self):
         data = {
@@ -43,7 +44,8 @@ class Config:
             "admin": self.admin,
             "enabled": self.enabled,
             "firstRun": self.firstRun,
-            "totalFixed": self.totalFixed
+            "totalFixed": self.totalFixed,
+            "timeoutTime": self.timeoutTime
         }
 
         with open(self.path, 'w') as file:
