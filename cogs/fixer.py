@@ -1,18 +1,12 @@
 import discord
 from discord.ext import commands
 from helpers.constants import *
-from pathlib import Path
+from main import Config
 import re
-import json
 
 # This cog is the link fixer
 
-currentDir = Path(__file__).resolve().parent
-parrent = currentDir.parent
-configLocation = parrent / "config.json"
-
-with open(configLocation, "r") as file:
-    config = json.load(file)
+config = Config.getMainInstance()
 
 # --------- #
 
@@ -53,18 +47,12 @@ class Fixer(commands.Cog):
     async def on_message(self, message):
         if message.author == self.client.user:
             return
-        with open(configLocation, "r") as file:
-            config = json.load(file)
-        if not config["enabled"]:
+        if not config.enabled:
             return
-        
-        print(config["enabled"])
         
         async def match(result):
             print("Match found")
-            config["totalFixed"] += 1
-            with open('config.json', 'w') as f:
-                json.dump(config, f, indent=4)
+            config.update(totalFixed = config.totalFixed + 1)
             view = Buttons()
             view.message = await message.reply(f"<@{message.author.id}>: {result}", silent=True, view=view)
             await message.delete()

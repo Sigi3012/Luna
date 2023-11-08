@@ -1,18 +1,12 @@
 from discord.ext import commands
 from discord import app_commands
-from pathlib import Path
 from helpers.checks import missingPermissions
-import json
+from main import Config
 import time
 
 # This cog is for general commands eg. shutdown, toggle, status
 
-currentDir = Path(__file__).resolve().parent
-parrent = currentDir.parent
-configLocation = parrent / "config.json"
-
-with open(configLocation, "r") as file:
-    config = json.load(file)
+config = Config.getMainInstance()
 
 def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
@@ -33,13 +27,10 @@ class Utility(commands.Cog):
         name = "toggle",
         description = "This enables or disables the link fixer")
     async def togglefixer(self, interaction):
-        if interaction.user.id == int(config["admin"]):
-            config['enabled'] = not config['enabled']
-            with open(configLocation, 'w') as f:
-                json.dump(config, f, indent=4)
-            
-            await interaction.response.send_message(f"Toggled to {config['enabled']}", ephemeral=True)
-            print(f"Toggled to: {config['enabled']}@{currentTime()}")
+        if interaction.user.id == int(config.admin):
+            config.toggle()
+            await interaction.response.send_message(f"Toggled to {config.enabled}", ephemeral=True)
+            print(f"Toggled to: {config.enabled}@{currentTime()}")
         else:
             await missingPermissions(interaction)
 
@@ -49,9 +40,10 @@ class Utility(commands.Cog):
             name= "shutdown",
             description = "turns off the bot!")
     async def shutdown(self, interaction):
-        if interaction.user.id == int(config["admin"]):
+        if interaction.user.id == int(config.admin):
             await interaction.response.send_message("Shutting down...", delete_after=3.0, ephemeral=True)
             print(f"Bot offline@{currentTime()}")
+            config.save()
             await self.client.close()
         else:
             await missingPermissions(interaction)

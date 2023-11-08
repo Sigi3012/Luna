@@ -2,18 +2,12 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from helpers.checks import missingPermissions
+from main import Config
 from typing import Literal
-from pathlib import Path
-import json
 
 # This cog is for reloading other cogs
 
-currentDir = Path(__file__).resolve().parent
-parrent = currentDir.parent
-configLocation = parrent / "config.json"
-
-with open(configLocation, "r") as file:
-    config = json.load(file)
+config = Config.getMainInstance()
 
 # --------- #
 
@@ -21,11 +15,15 @@ class Reload(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(f"Cog: {__name__} has loaded")
+
     @app_commands.command(
             name = "reload",
             description = "Reloads a cog")
     async def reload(self, interaction: discord.Interaction, cog: Literal["fixer", "utility"]):
-        if interaction.user.id == int(config["admin"]):
+        if interaction.user.id == int(config.admin):
             try:
                 await self.client.reload_extension(name = f"cogs.{cog}")
                 await interaction.response.send_message(f"Successfully reloaded **{cog}**")

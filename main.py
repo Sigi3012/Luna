@@ -1,16 +1,14 @@
 import discord
 from discord.ext import commands
 import helpers.checks as checks
-import json
-import time
+from helpers.configSetup import Config
+import signal
 import platform
-
-with open("config.json", "r") as file:
-    config = json.load(file)
-
-checks.check()
+import sys
 
 # --------- #
+
+config = Config.getMainInstance()
 
 class embedFixer(commands.Bot):
     def __init__(self):
@@ -26,8 +24,8 @@ class embedFixer(commands.Bot):
         print(f"Python version: {str(platform.python_version())}")
         print(f"Discord.py version: {discord.__version__}")
         print(f"Synced {str(len(syncedCommands))} commands")
-        global startUptime
-        startUptime = time.time()
+        for key, value in vars(config).items():
+            print(f"{key}: {value}")
         
     async def setup_hook(self):
         for ext in self.cogslist:
@@ -38,4 +36,13 @@ client = embedFixer()
 # --------- #
 
 if __name__ == "__main__":
-    client.run(config["token"])
+    checks.check()
+    config.load()
+    client.run(config.token)
+
+def signal_handler(filler, filler2):
+    print("\n\nImproper shutdown please use /shutdown instead.")
+    config.save()
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
