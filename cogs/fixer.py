@@ -49,6 +49,13 @@ class Fixer(commands.Cog):
             return
         if not config.enabled:
             return
+        if discord.TextChannel.is_nsfw:
+            if config.nsfwAllowed != True:
+                print("link in unallowed channel")
+            else:
+                pass
+        else:
+            pass
         
         async def match(result):
             print("Match found")

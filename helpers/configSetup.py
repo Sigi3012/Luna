@@ -37,6 +37,7 @@ class Config:
         self.firstRun = data['firstRun']
         self.totalFixed = data['totalFixed']
         self.timeoutTime = data['timeoutTime']
+        self.nsfwAllowed = data['nsfwAllowed']
 
     def save(self):
         data = {
@@ -45,7 +46,8 @@ class Config:
             "enabled": self.enabled,
             "firstRun": self.firstRun,
             "totalFixed": self.totalFixed,
-            "timeoutTime": self.timeoutTime
+            "timeoutTime": self.timeoutTime,
+            "nsfwAllowed": self.nsfwAllowed
         }
 
         with open(self.path, 'w') as file:

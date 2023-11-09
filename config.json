@@ -4,5 +4,6 @@
     "enabled": false,
     "firstRun": true,
     "totalFixed": 0,
-    "timeoutTime": 60
+    "timeoutTime": 60,
+    "nsfwAllowed": false
 }
