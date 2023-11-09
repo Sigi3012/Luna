@@ -64,7 +64,7 @@ class Fixer(commands.Cog):
             view.message = await message.reply(f"<@{message.author.id}>: {result}", silent=True, view=view)
             await message.delete()
         
-        endResult = re.sub(VXPATTERN, VXREPLACEMENT, message.content)
+        endResult = re.sub(FXPATTERN, FXREPLACEMENT, message.content)
         endResult = re.sub(DDPOSTPATTERN, DDPOSTREPLACEMENT, endResult)
         endResult = re.sub(DDREELPATTERN, DDREELREPLACEMENT, endResult)
         endResult = re.sub(TTPATTERN, TTREPLACEMENT, endResult)
