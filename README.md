@@ -17,7 +17,51 @@ This bot automaticaly fixes [Twitter](https://twitter.com) (or [X.com](https://x
 2. /status
 3. /shutdown
 
-## Embed fixers
+If you only care about the link fixer use branch [lightweight](https://github.com/Sigi3012/embedFixer/tree/lightweight)
+
+## Installation
+### Requirements
+* Python3.11 or higher <br> (lower versions untested)
+* Discord.py
+```sh
+git clone https://github.com/Sigi3012/embedFixer
+cd embedFixer
+```
+### Local
+```sh
+pip install -r requirements.txt
+
+# Windows
+python main.py
+# Unix
+python3 main.py
+```
+```sh
+# If you dont want to install globally
+
+# Windows
+python -m venv venv
+.\venv\Scripts\activate
+# Unix
+python3 -m venv venv
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+### Server
+```sh
+pip install -r requirements.txt
+
+sudo apt get tmux # Or whatever package manager you use
+tmux
+python3 main.py
+CTRL+B > d
+
+# Reattach with 
+tmux attach-session
+```
+
+## Credits ❤️
 
 Please go and star these repos, as this project wouldn't be possible without them
 
@@ -29,11 +73,8 @@ Please go and star these repos, as this project wouldn't be possible without the
 ## TODO
 1. Better logging
 2. Pinterest fix (never)
-<s>
-3. Move to cogs
-4. More platforms
-</s>
+3. <s>Move to cogs</s>
+4. <s>More platforms</s>
 
 ---
 
-![:fixEmbed](https://count.getloli.com/get/@:fixEmbed?theme=moebooru)
