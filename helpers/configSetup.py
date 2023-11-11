@@ -53,13 +53,19 @@ class Config:
         with open(self.path, 'w') as file:
             json.dump(data, file, indent=4)
 
-    def update(self, enabled=None, firstRun=None, totalFixed=None):
+    def update(self, token=None, admin=None, enabled=None, firstRun=None, totalFixed=None, nsfwAllowed=None):
+        if token is not None:
+            self.token = token
+        if admin is not None:
+            self.admin = admin
         if enabled is not None:
             self.enabled = enabled
         if firstRun is not None:
             self.firstRun = firstRun
         if totalFixed is not None:
             self.totalFixed = totalFixed
+        if nsfwAllowed is not None:
+            self.nsfwAllowed = nsfwAllowed
 
     def toggle(self):
         self.enabled = not self.enabled

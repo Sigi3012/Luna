@@ -8,15 +8,13 @@ def check():
             test = int(config.admin)
         except ValueError:
             print("Please set a user ID in config.json and run the bot again.")
-            exit()
+            return False
+    else:
+        return False
 
-    if config.token == "yourtokenhere":
+    if len(config.token) < 20:
         print("Please set your discord bot token in the config.json, to get your bot token go to the discord developer portal and select your app, then it is found in Bot > Token.")
-        exit()
+        return False
    
-    if config.firstRun:
-        print("Thank you for using my bot!\nTo enable the fixer use '/toggle' (admin perms required)")
-        config.update(firstRun = not config.firstRun)
-
 async def missingPermissions(interaction):
     await interaction.response.send_message("You dont have permissions to do this!", ephemeral=True)

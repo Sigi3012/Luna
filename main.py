@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import helpers.checks as checks
 from helpers.configSetup import Config
+from helpers.setup import setupBot
 import signal
 import platform
 import sys
@@ -36,7 +37,13 @@ client = embedFixer()
 # --------- #
 
 if __name__ == "__main__":
-    checks.check()
+    if checks.check() == False:
+        if config.firstRun == True:
+            setupBot()
+        else:
+            exit()
+    else:
+        pass
     config.load()
     client.run(config.token)
 
