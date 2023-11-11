@@ -1,9 +1,5 @@
 {
     "token": "yourtokenhere",
-    "admin": "your user id here (this user can control the bot be careful!)",
-    "enabled": false,
-    "firstRun": true,
-    "totalFixed": 0,
     "timeoutTime": 60,
     "nsfwAllowed": false
 }

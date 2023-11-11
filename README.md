@@ -12,12 +12,10 @@
 
 This bot automaticaly fixes [Twitter](https://twitter.com) (or [X.com](https://x.com)), [Instagram](https://instagram.com), [TikTok](https://tiktok.com) or [Reddit](https://reddit.com) links
 
-### Commands:
-1. /toggle
-2. /status
-3. /shutdown
+### This version has <u>zero</u> commands <br>
+Please use the [main](https://github.com/Sigi3012/embedFixer/tree/main) branch instead for more features and QOL
 
-## Embed fixers
+## Credits ❤️
 
 Please go and star these repos, as this project wouldn't be possible without them
 
@@ -26,14 +24,6 @@ Please go and star these repos, as this project wouldn't be possible without the
 [vxtiktok](https://github.com/dylanpdx/vxtiktok) \
 [FixReddit](https://github.com/MinnDevelopment/fxreddit)
 
-## TODO
-1. Better logging
-2. Pinterest fix (never)
-<s>
-3. Move to cogs
-4. More platforms
-</s>
-
----
+#
 
 ![:fixEmbed](https://count.getloli.com/get/@:fixEmbed?theme=moebooru)
