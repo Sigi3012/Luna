@@ -27,7 +27,14 @@ If you only care about the link fixer use branch [lightweight](https://github.co
 git clone https://github.com/Sigi3012/embedFixer
 cd embedFixer
 ```
+### Docker
+* Install [Docker](https://docs.docker.com/desktop/release-notes/)
+* Edit the "docker-compose.yml" and add your bot's token and your personal userid to the respective values under "environment:"
+```sh
+docker compose up # Add "-d" to run detached
+```
 ### Local
+You don't need to edit .env just run and follow install script
 ```sh
 pip install -r requirements.txt
 

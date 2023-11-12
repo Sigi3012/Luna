@@ -7,13 +7,13 @@ def check():
         try:
             test = int(config.admin)
         except ValueError:
-            print("Please set a user ID in config.json and run the bot again.")
+            print("Please set a user ID in .env and run the bot again.")
             return False
     else:
         return False
 
     if len(config.token) < 20:
-        print("Please set your discord bot token in the config.json, to get your bot token go to the discord developer portal and select your app, then it is found in Bot > Token.")
+        print("Please set your discord bot token in the .env, to get your bot token go to the discord developer portal and select your app, then it is found in Bot > Token.")
         return False
    
 async def missingPermissions(interaction):

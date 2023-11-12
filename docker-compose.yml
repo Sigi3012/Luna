@@ -1,0 +1,12 @@
+version: '1'
+services:
+  embed-fixer:
+    build: .
+    restart: unless-stopped
+    environment:
+      # Don't use quotation marks
+      - TOKEN=your bot token here
+      - ADMIN=your discord userid here
+      - DOCKER=True # Please really dont change this
+    env_file:
+      - .env

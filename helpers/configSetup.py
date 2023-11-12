@@ -1,4 +1,8 @@
 import json
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # This is held together with sheer will power and sticky tape 
 # I dont fully understand how it works but it does
@@ -16,7 +20,7 @@ class Config:
             raise Exception("An instance of Config already exists. Use Config.get_instance() to access it.")
 
     def __init__(self, path="config.json"):
-        if not hasattr(self, 'initialized'):
+        if not hasattr(self, "initialized"):
             self.path = path
             self.load()
             self.initialized = True
@@ -28,21 +32,26 @@ class Config:
         return cls._instance
 
     def load(self):
-        with open(self.path, 'r') as file:
+        with open(self.path, "r") as file:
             data = json.load(file)
 
-        self.token = data['token']
-        self.admin = data['admin']
-        self.enabled = data['enabled']
-        self.firstRun = data['firstRun']
-        self.totalFixed = data['totalFixed']
-        self.timeoutTime = data['timeoutTime']
-        self.nsfwAllowed = data['nsfwAllowed']
+        self.token = os.getenv("TOKEN")
+        self.admin = os.getenv("ADMIN")
+        self.docker = os.getenv("DOCKER", "False").lower() in ("true", "1")
+
+        self.enabled = data["enabled"]
+        self.firstRun = data["firstRun"]
+        self.totalFixed = data["totalFixed"]
+        self.timeoutTime = data["timeoutTime"]
+        self.nsfwAllowed = data["nsfwAllowed"]
 
     def save(self):
+
+        with open(".env", "w") as env:
+            env.write(f"TOKEN={self.token}\n")
+            env.write(f"ADMIN={self.admin}\n")
+
         data = {
-            "token": self.token,
-            "admin": self.admin,
             "enabled": self.enabled,
             "firstRun": self.firstRun,
             "totalFixed": self.totalFixed,
@@ -50,7 +59,7 @@ class Config:
             "nsfwAllowed": self.nsfwAllowed
         }
 
-        with open(self.path, 'w') as file:
+        with open(self.path, "w") as file:
             json.dump(data, file, indent=4)
 
     def update(self, token=None, admin=None, enabled=None, firstRun=None, totalFixed=None, nsfwAllowed=None):

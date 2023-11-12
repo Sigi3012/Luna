@@ -7,10 +7,10 @@ def setupBot():
     def finish():
         config.update(firstRun=False)
         config.save()
-        print("\nNow rerun main.py")
+        print("\nThanks for using my bot!")
+        print("Now rerun main.py")
         exit()
 
-    print("Thanks for using my bot!")
     while True:
         try:
             completed = input("Have you already setup your config.json? y/n: ")

@@ -36,14 +36,23 @@ client = embedFixer()
 
 # --------- #
 
-if __name__ == "__main__":
-    if checks.check() == False:
-        if config.firstRun == True:
-            setupBot()
+# This is so messy lol
+def tests():
+    if config.docker != True:
+        if checks.check() == False:
+            if config.firstRun == True:
+                setupBot()
+            else:
+                exit()
         else:
-            exit()
+            pass
     else:
         pass
+
+# --------- #
+
+if __name__ == "__main__":
+    tests()
     config.load()
     client.run(config.token)
 
