@@ -6,6 +6,7 @@ from helpers.setup import setupBot
 import signal
 import platform
 import sys
+import os
 
 # --------- #
 
@@ -17,10 +18,14 @@ class embedFixer(commands.Bot):
             command_prefix = "-",
             intents = discord.Intents().all()
         )
-        self.cogslist = ["fixer", "utility", "reload", "status"]
+        self.synced = False
 
     async def on_ready(self):
-        syncedCommands = await self.tree.sync()
+        await self.wait_until_ready()
+        if not self.synced:
+            syncedCommands = await self.tree.sync()
+            self.synced = True
+        
         print(f"Logged in as {self.user.name}")
         print(f"Python version: {str(platform.python_version())}")
         print(f"Discord.py version: {discord.__version__}")
@@ -29,8 +34,9 @@ class embedFixer(commands.Bot):
             print(f"{key}: {value}")
         
     async def setup_hook(self):
-        for ext in self.cogslist:
-            await self.load_extension(f"cogs.{ext}")
+        for ext in os.listdir("./cogs"):
+            if ext.endswith(".py"):
+                await self.load_extension(f"cogs.{ext[:-3]}")
 
 client = embedFixer()
 
