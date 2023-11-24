@@ -37,23 +37,16 @@ class Config:
 
         self.token = os.getenv("TOKEN")
         self.admin = os.getenv("ADMIN")
-        self.docker = os.getenv("DOCKER", "False").lower() in ("true", "1")
 
         self.enabled = data["enabled"]
-        self.firstRun = data["firstRun"]
         self.totalFixed = data["totalFixed"]
         self.timeoutTime = data["timeoutTime"]
         self.nsfwAllowed = data["nsfwAllowed"]
 
     def save(self):
 
-        with open(".env", "w") as env:
-            env.write(f"TOKEN={self.token}\n")
-            env.write(f"ADMIN={self.admin}\n")
-
         data = {
             "enabled": self.enabled,
-            "firstRun": self.firstRun,
             "totalFixed": self.totalFixed,
             "timeoutTime": self.timeoutTime,
             "nsfwAllowed": self.nsfwAllowed
@@ -62,19 +55,11 @@ class Config:
         with open(self.path, "w") as file:
             json.dump(data, file, indent=4)
 
-    def update(self, token=None, admin=None, enabled=None, firstRun=None, totalFixed=None, nsfwAllowed=None):
-        if token is not None:
-            self.token = token
-        if admin is not None:
-            self.admin = admin
+    def update(self, enabled=None, totalFixed=None):
         if enabled is not None:
             self.enabled = enabled
-        if firstRun is not None:
-            self.firstRun = firstRun
         if totalFixed is not None:
             self.totalFixed = totalFixed
-        if nsfwAllowed is not None:
-            self.nsfwAllowed = nsfwAllowed
 
     def toggle(self):
         self.enabled = not self.enabled

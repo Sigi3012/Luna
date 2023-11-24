@@ -2,7 +2,6 @@ import discord
 from discord.ext import commands
 import helpers.checks as checks
 from helpers.configSetup import Config
-from helpers.setup import setupBot
 import signal
 import platform
 import sys
@@ -42,23 +41,12 @@ client = embedFixer()
 
 # --------- #
 
-# This is so messy lol
-def tests():
-    if config.docker != True:
-        if checks.check() == False:
-            if config.firstRun == True:
-                setupBot()
-            else:
-                exit()
-        else:
-            pass
+if __name__ == "__main__":
+    if checks.check() == False:
+        exit()
     else:
         pass
 
-# --------- #
-
-if __name__ == "__main__":
-    tests()
     config.load()
     client.run(config.token)
 
