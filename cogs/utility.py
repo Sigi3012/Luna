@@ -37,14 +37,27 @@ class Utility(commands.Cog):
     # --------- #
 
     @app_commands.command(
-            name= "shutdown",
-            description = "turns off the bot!")
+        name = "shutdown",
+        description = "turns off the bot!")
     async def shutdown(self, interaction):
         if interaction.user.id == int(config.admin):
             await interaction.response.send_message("Shutting down...", delete_after=3.0, ephemeral=True)
             print(f"Bot offline@{currentTime()}")
             config.save()
             await self.client.close()
+        else:
+            await missingPermissions(interaction)
+
+    # --------- #
+
+    @app_commands.command(
+        name = "sync",
+        description = "syncs new commands"
+    )
+    async def sync(self, interaction):
+        if interaction.user.id == int(config.admin):
+            syncedCommands = await self.client.tree.sync()
+            await interaction.response.send_message(f"Synced {str(len(syncedCommands))} commands")
         else:
             await missingPermissions(interaction)
 

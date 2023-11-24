@@ -17,21 +17,14 @@ class embedFixer(commands.Bot):
             command_prefix = "-",
             intents = discord.Intents().all()
         )
-        self.synced = False
 
     async def on_ready(self):
-        await self.wait_until_ready()
-        if not self.synced:
-            syncedCommands = await self.tree.sync()
-            self.synced = True
-        
         print(f"Logged in as {self.user.name}")
         print(f"Python version: {str(platform.python_version())}")
         print(f"Discord.py version: {discord.__version__}")
-        print(f"Synced {str(len(syncedCommands))} commands")
         for key, value in vars(config).items():
             print(f"{key}: {value}")
-        
+
     async def setup_hook(self):
         for ext in os.listdir("./cogs"):
             if ext.endswith(".py"):

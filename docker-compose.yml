@@ -7,6 +7,5 @@ services:
       # Don't use quotation marks
       - TOKEN=your bot token here
       - ADMIN=your discord userid here
-      - DOCKER=True # Please really dont change this
     env_file:
       - .env
