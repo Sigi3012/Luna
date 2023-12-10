@@ -22,7 +22,7 @@ class Reload(commands.Cog):
     @app_commands.command(
             name = "reload",
             description = "Reloads a cog")
-    async def reload(self, interaction: discord.Interaction, cog: Literal["fixer", "utility"]):
+    async def reload(self, interaction: discord.Interaction, cog: Literal["fixer", "utility", "quotes"]):
         if interaction.user.id == int(config.admin):
             try:
                 await self.client.reload_extension(name = f"cogs.{cog}")

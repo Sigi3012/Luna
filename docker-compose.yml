@@ -7,5 +7,6 @@ services:
       # Don't use quotation marks
       - TOKEN=your bot token here
       - ADMIN=your discord userid here
+      - QOUTECHANNELID=
     env_file:
       - .env

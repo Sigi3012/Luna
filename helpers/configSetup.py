@@ -37,10 +37,12 @@ class Config:
 
         self.token = os.getenv("TOKEN")
         self.admin = os.getenv("ADMIN")
+        self.qoutechannelid = os.getenv("QUOTECHANNELID")
 
         self.enabled = data["enabled"]
         self.totalFixed = data["totalFixed"]
         self.timeoutTime = data["timeoutTime"]
+        self.cooldownMinutes = data["cooldownMinutes"]
         self.nsfwAllowed = data["nsfwAllowed"]
 
     def save(self):
@@ -49,6 +51,7 @@ class Config:
             "enabled": self.enabled,
             "totalFixed": self.totalFixed,
             "timeoutTime": self.timeoutTime,
+            "cooldownMinutes": self.cooldownMinutes,
             "nsfwAllowed": self.nsfwAllowed
         }
 

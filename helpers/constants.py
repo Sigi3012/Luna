@@ -12,3 +12,4 @@ PXPATTERN = r'https:\/\/(?:www\.)?pixiv\.net\/(?:en\/)?(?:artworks|member_illust
 PXREPLACEMENT = r'https://phixiv.net/artworks/\1'
 RXPATTERN = r'https?:\/\/(?:www\.)?(reddit\.com)\/(.*)'
 RXREPLACEMENT = r'https://rxddit.com/\2'
+FONT = "./JetBrains Mono.ttf"

@@ -1,0 +1,5 @@
+Hello!
+Thank you for using my bot
+
+Cached resized images will be stored here feel free to delete them at any time
+delete this file if you want to as it does nothing (so I can add this folder in git lol)

@@ -2,5 +2,6 @@
     "enabled": false,
     "totalFixed": 0,
     "timeoutTime": 60,
+    "cooldownMinutes": 10,
     "nsfwAllowed": false
 }

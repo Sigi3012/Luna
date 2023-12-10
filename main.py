@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import helpers.checks as checks
 from helpers.configSetup import Config
+from helpers.database import createTables
 import signal
 import platform
 import sys
@@ -24,11 +25,14 @@ class embedFixer(commands.Bot):
         print(f"Discord.py version: {discord.__version__}")
         for key, value in vars(config).items():
             print(f"{key}: {value}")
+        await createTables()
 
     async def setup_hook(self):
         for ext in os.listdir("./cogs"):
             if ext.endswith(".py"):
                 await self.load_extension(f"cogs.{ext[:-3]}")
+        if config.qoutechannelid == "":
+            await self.unload_extension("cogs.quotes")
 
 client = embedFixer()
 
