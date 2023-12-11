@@ -16,7 +16,7 @@ import socket
 
 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0"}
 
-async def download_image(url):
+async def downloadImage(url):
     connector = aiohttp.TCPConnector(family=socket.AF_INET)
     async with aiohttp.ClientSession(connector=connector, headers=headers) as session:
         async with session.get(url) as response:
@@ -24,7 +24,7 @@ async def download_image(url):
         
 # --------- #
 
-def process_image(data):
+def processImage(data):
     with Image.open(BytesIO(data)) as img:
         img = img.resize((80, 80))
         outputBuffer = BytesIO()
@@ -48,10 +48,10 @@ async def createQuoteImage(message, pfpURL, username, userid, rolecolour, messag
     
     if os.path.exists(cachePath) != True:
         print("Profile picture not in cache, fetching...")        
-        image_data = await download_image(pfpURL)
+        image_data = await downloadImage(pfpURL)
         
         with ThreadPoolExecutor() as pool:
-            processed_data = await asyncio.get_event_loop().run_in_executor(pool, process_image, image_data)
+            processed_data = await asyncio.get_event_loop().run_in_executor(pool, processImage, image_data)
 
         with open(cachePath, "wb") as file:
             file.write(processed_data)
