@@ -48,7 +48,7 @@ class Quotes(commands.Cog):
         
         quoteChannel = self.client.get_channel(int(config.qoutechannelid))
         await quoteChannel.send(
-            content = f"Qouted by <@{interaction.user.id}>",
+            content = f"Quoted by <@{interaction.user.id}>",
             file = discord.File(r'./cache/quoteOutput.png'),
             view = view
         )
