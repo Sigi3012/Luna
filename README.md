@@ -79,7 +79,7 @@ Please go and star these repos, as this project wouldn't be possible without the
 
 ## TODO
 1. Better logging
-2. Pinterest fix (never)
+2. <s>Pinterest fix (never)</s>
 3. <s>Move to cogs</s>
 4. <s>More platforms</s>
 

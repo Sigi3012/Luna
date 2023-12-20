@@ -89,6 +89,9 @@ class Fixer(commands.Cog):
             view.message = await message.reply(f"<@{message.author.id}>: {content}", silent=True, embed=embed, view=view)
             
             await message.delete()
+            
+            print("Pinterest link fixed!")
+            config.update(totalFixed = config.totalFixed + 1)
             return
         
         if endResult != message.content:
