@@ -25,7 +25,11 @@ class embedFixer(commands.Bot):
         print(f"Discord.py version: {discord.__version__}")
         for key, value in vars(config).items():
             print(f"{key}: {value}")
+            
         await createTables()
+        
+        activity = discord.Game("Watching for links...")
+        await client.change_presence(status = discord.Status.online, activity = activity)
 
     async def setup_hook(self):
         for ext in os.listdir("./cogs"):

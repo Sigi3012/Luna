@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
 from helpers.constants import *
+from helpers.pinterestEmbed import scrapeHTML, getData
 from main import Config
 import re
-
-# This cog is the link fixer
+from datetime import datetime
 
 config = Config.getMainInstance()
 
@@ -47,22 +47,12 @@ class Fixer(commands.Cog):
     async def on_message(self, message):
         if message.author == self.client.user:
             return
+        
         if not config.enabled:
             return
-        if message.channel.nsfw:
-            if config.nsfwAllowed != True:
-                return
-            else:
-                pass
-        else:
-            pass
         
-        async def match(result):
-            print("Match found")
-            config.update(totalFixed = config.totalFixed + 1)
-            view = Buttons()
-            view.message = await message.reply(f"<@{message.author.id}>: {result}", silent=True, view=view)
-            await message.delete()
+        if message.channel.nsfw and config.nsfwAllowed != True:
+            return
         
         endResult = re.sub(FXPATTERN, FXREPLACEMENT, message.content)
         endResult = re.sub(DDPOSTPATTERN, DDPOSTREPLACEMENT, endResult)
@@ -71,8 +61,45 @@ class Fixer(commands.Cog):
         endResult = re.sub(VMPATTERN, VMREPLACEMENT, endResult)
         endResult = re.sub(PXPATTERN, PXREPLACEMENT, endResult)
         endResult = re.sub(RXPATTERN, RXREPLACEMENT, endResult)
+        
+        pinterestCheck = re.match(PNPATTERN, endResult)
+        if pinterestCheck:
+            pinID = pinterestCheck.group(1)
+            
+            html = await scrapeHTML(pinID)
+            
+            if html == None:
+                await message.reply("Something went wrong!")
+                return
+            
+            data = await getData(html)
+            
+            embed = discord.Embed(
+                title = data[1],
+                url = pinterestCheck.group(0),
+                colour = 0xfc4f6a,
+                timestamp = datetime.now(),
+            )
+            embed.set_image(url = data[0])
+            embed.set_footer(text = data[2])
+            
+            content = re.sub(PNPATTERN, "", endResult)
+            
+            view = Buttons()
+            view.message = await message.reply(f"<@{message.author.id}>: {content}", silent=True, embed=embed, view=view)
+            
+            await message.delete()
+            return
+        
         if endResult != message.content:
-            await match(endResult)
+            print("Match found")
+            config.update(totalFixed = config.totalFixed + 1)
+            
+            view = Buttons()
+            view.message = await message.reply(f"<@{message.author.id}>: {endResult}", silent=True, view=view)
+            
+            await message.delete()
+            return
 
 # --------- #
 
