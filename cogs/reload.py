@@ -22,11 +22,12 @@ class Reload(commands.Cog):
     @app_commands.command(
             name = "reload",
             description = "Reloads a cog")
-    async def reload(self, interaction: discord.Interaction, cog: Literal["fixer", "utility", "quotes"]):
+    async def reload(self, interaction: discord.Interaction, cog: Literal["fixer", "utility", "quotes", "misc"]):
         if interaction.user.id == int(config.admin):
             try:
                 await self.client.reload_extension(name = f"cogs.{cog}")
                 await interaction.response.send_message(f"Successfully reloaded **{cog}**")
+                print(f"Reloaded {cog}")
             except Exception as e:
                 await interaction.response.send_message(f"Failed to reload **{cog}**! See error below\n```{e}```", ephemeral = True)
         else:

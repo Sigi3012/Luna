@@ -38,6 +38,7 @@ class Config:
         self.token = os.getenv("TOKEN")
         self.admin = os.getenv("ADMIN")
         self.qoutechannelid = os.getenv("QUOTECHANNELID")
+        self.modchannel = os.getenv("MODCHANNEL")
 
         self.enabled = data["enabled"]
         self.totalFixed = data["totalFixed"]

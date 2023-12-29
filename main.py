@@ -30,6 +30,7 @@ class embedFixer(commands.Bot):
         
         activity = discord.Game("Watching for links...")
         await client.change_presence(status = discord.Status.online, activity = activity)
+        print(activity)
 
     async def setup_hook(self):
         for ext in os.listdir("./cogs"):
