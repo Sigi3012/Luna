@@ -54,6 +54,9 @@ class Fixer(commands.Cog):
         if message.channel.nsfw and config.nsfwAllowed != True:
             return
         
+        if re.search("nofix", message.content, re.IGNORECASE):
+            return
+        
         endResult = re.sub(FXPATTERN, FXREPLACEMENT, message.content)
         endResult = re.sub(DDPOSTPATTERN, DDPOSTREPLACEMENT, endResult)
         endResult = re.sub(DDREELPATTERN, DDREELREPLACEMENT, endResult)
