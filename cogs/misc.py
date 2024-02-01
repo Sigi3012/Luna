@@ -84,8 +84,8 @@ class Misc(commands.Cog):
         if message.author == self.client.user:
             return
         
-        if message.content == "!test":
-            await message.reply(f"{self.moderationChannel}")
+        if message.content == "!gay":
+            await message.reply("https://tenor.com/view/bronya-seele-bronyaseele-seele-x-bronya-bronya-x-seele-gif-22095999")
 
 # --------- #
 
