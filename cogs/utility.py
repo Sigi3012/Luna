@@ -57,9 +57,20 @@ class Utility(commands.Cog):
     async def sync(self, interaction):
         if interaction.user.id == int(config.admin):
             syncedCommands = await self.client.tree.sync()
-            await interaction.response.send_message(f"Synced {str(len(syncedCommands))} commands")
+            names = []
+            for synced in syncedCommands:
+                names.append(synced.name)
+            await interaction.response.send_message(f"Synced {str(len(syncedCommands))} commands. {names}")
         else:
             await missingPermissions(interaction)
+
+    @app_commands.command(
+        name = "ping",
+        description = "Sends the latency of the bot!"
+    )
+    async def ping(self, interaction):
+        latency = self.client.latency
+        await interaction.response.send_message(f"My latency is: {round(latency, 1)}ms!")
 
 # --------- #
 
