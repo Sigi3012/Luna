@@ -2,6 +2,7 @@ from discord.ext import commands
 from main import Config
 import discord
 from datetime import datetime
+from random import randint
 
 config = Config.getMainInstance()
 
@@ -84,8 +85,25 @@ class Misc(commands.Cog):
         if message.author == self.client.user:
             return
         
-        if message.content == "!gay":
-            await message.reply("https://tenor.com/view/bronya-seele-bronyaseele-seele-x-bronya-bronya-x-seele-gif-22095999")
+        options = [
+            "https://tenor.com/view/bronya-seele-bronyaseele-seele-x-bronya-bronya-x-seele-gif-22095999",
+            "https://tenor.com/view/kiss-anime-engage-kiss-maribel-hearn-usami-renko-gif-15812160006411953887"
+            "https://tenor.com/view/hop-on-ffxiv-hop-on-hop-on-ff14-lunatwt-lunanoko-gif-25665714",
+            "https://tenor.com/view/bloom-into-you-yagate-kimi-ni-naru-yuri-kiss-gif-21637575",
+            "https://tenor.com/view/yuri-couple-lgbt-kiss-gif-12095090",
+            "https://tenor.com/view/anime-cuddle-cute-gif-12668872",
+            "https://tenor.com/view/bloom-into-you-yagate-kimi-ni-naru-yuu-koito-touko-nanami-yuri-gif-23478164",
+            "https://tenor.com/view/bed-animeyuri-aoi-hana-sweetblueflowers-gif-23212941",
+            "https://tenor.com/view/kiss-kiss-girl-kiss-girl-anime-kiss-girl-manga-anime-gif-14374952",
+            "https://tenor.com/view/anime-yuri-kiss-make-out-sakura-trick-gif-15788996"
+        ]
+        
+        items = len(options)
+        
+        choice = randint(1, items)
+        
+        if message.content == "!gay" or "!yuri":
+            await message.reply(options[choice - 1])
 
 # --------- #
 
