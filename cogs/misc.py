@@ -102,7 +102,7 @@ class Misc(commands.Cog):
         
         choice = randint(1, items)
         
-        if message.content == "!gay" or "!yuri":
+        if message.content == "!gay":
             await message.reply(options[choice - 1])
 
 # --------- #
