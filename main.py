@@ -12,7 +12,7 @@ import os
 
 config = Config.getMainInstance()
 
-class embedFixer(commands.Bot):
+class Luna(commands.Bot):
     def __init__(self):
         super().__init__(
             command_prefix = "-",
@@ -39,7 +39,7 @@ class embedFixer(commands.Bot):
         if config.qoutechannelid == "":
             await self.unload_extension("cogs.quotes")
 
-client = embedFixer()
+client = Luna()
 
 # --------- #
 
