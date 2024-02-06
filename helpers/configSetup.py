@@ -36,9 +36,12 @@ class Config:
             data = json.load(file)
 
         self.token = os.getenv("TOKEN")
+        self.osusecret = os.getenv("OSUSECRET")
+        self.clientid = os.getenv("CLIENTID")
         self.admin = os.getenv("ADMIN")
         self.qoutechannelid = os.getenv("QUOTECHANNELID")
         self.modchannel = os.getenv("MODCHANNEL")
+        self.osuchannel = os.getenv("OSUCHANNEL")
 
         self.enabled = data["enabled"]
         self.totalFixed = data["totalFixed"]

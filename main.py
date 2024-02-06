@@ -38,6 +38,8 @@ class Luna(commands.Bot):
                 await self.load_extension(f"cogs.{ext[:-3]}")
         if config.qoutechannelid == "":
             await self.unload_extension("cogs.quotes")
+        if config.osuchannel == "":
+            await self.unload_extension("cogs.maps")
 
 client = Luna()
 
