@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 from discord import app_commands
 
 from main import Config
-from helpers.osuAPI import authenticate, getBeatmap, populateDatabase, getAllQualifiedIds
+from helpers.osuAPI import authenticate, getBeatmap, populateDatabase, getAllQualifiedIds, mostCommonMode
 from helpers.database import insertBeatmapData, deleteBeatmapEntry, getDatabaseEntry, getAllDatabaseIds
 from helpers.checks import missingPermissions
 
@@ -44,6 +44,7 @@ async def buildEmbed(id: int, status: int = 3):
         data.append(responseData["creator"])
         data.append(responseData["submitted_date"])
         data.append(responseData["ranked_date"])
+        data.append(await mostCommonMode(responseData))
     
         status = responseData["ranked"]
     else:
@@ -54,6 +55,7 @@ async def buildEmbed(id: int, status: int = 3):
     creatorName = data[3]
     submittedDate = data[4]
     statusChangeDate = data[5]
+    mostCommonGamemode = data[6]
     
     # --------- #
     
@@ -117,7 +119,7 @@ async def buildEmbed(id: int, status: int = 3):
     # Looks like this https://imgur.com/a/AIQpgOG
     embed = discord.Embed(
         description = f"**[{title}](https://osu.ppy.sh/beatmapsets/{id})** | **{beatmapStatus} {statusChangeUnix}**\n"
-                      f"Mapped by [{creatorName}](https://osu.ppy.sh/users/{await replaceSpaces(creatorName)})\n"
+                      f"Mapped by [{creatorName}](https://osu.ppy.sh/users/{await replaceSpaces(creatorName)}) | [osu!{mostCommonGamemode}]\n"
                       f"Artist: {artist}\n"
                       f"Submitted: <t:{submittedUnix}:R>",
         colour = embedColour,

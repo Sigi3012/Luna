@@ -3,6 +3,8 @@ import socket
 from main import Config
 from helpers.database import insertBeatmapData
 
+from statistics import StatisticsError, mode
+
 config = Config.getMainInstance()
 
 BASEURL = "https://osu.ppy.sh/api/v2"
@@ -96,7 +98,8 @@ async def populateDatabase():
                             beatmap["artist"],
                             beatmap["creator"],
                             beatmap["submitted_date"],
-                            beatmap["ranked_date"]
+                            beatmap["ranked_date"],
+                            await mostCommonMode(beatmap)
                         )
                     
                     print(json["cursor_string"])
@@ -158,3 +161,22 @@ async def getAllQualifiedIds():
         cursorString = await getMaps(cursorString)
     
     return ids
+
+async def mostCommonMode(data):
+    """
+    """
+    list = []
+    for beatmap in data["beatmaps"]:
+        list.append(beatmap["mode"])
+    
+    try:
+        result = mode(list)
+        
+        if result == "osu":
+            return "standard"
+        elif result == "fruits":
+            return "catch"
+        else:
+            return result
+    except StatisticsError:
+        return None

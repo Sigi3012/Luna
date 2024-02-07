@@ -26,7 +26,8 @@ async def createTables():
                 artist TEXT,
                 creatorName TEXT,
                 submittedDate TIMESTAMP,
-                qualifiedDate TIMESTAMP
+                qualifiedDate TIMESTAMP,
+                mostCommonGamemode TEXT
            )
        """)
        
@@ -60,6 +61,7 @@ async def insertBeatmapData(
     creatorName: Optional[str] = None,
     submittedDate: Optional[str] = None,
     qualifiedDate: Optional[str] = None,
+    mostCommonGamemode: Optional[str] = None
     ):
     async with aiosqlite.connect(DATABASE) as db:
         cursor = await db.cursor()
@@ -72,27 +74,30 @@ async def insertBeatmapData(
                 return
             
             if title is not None:
-                await cursor.execute("INSERT OR IGNORE INTO beatmapsets VALUES (?, ?, ?, ?, ?, ?)",
+                await cursor.execute("INSERT OR IGNORE INTO beatmapsets VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (
                     id,
                     title,
                     artist,
                     creatorName,
                     submittedDate,
-                    qualifiedDate
+                    qualifiedDate,
+                    mostCommonGamemode
                     )
                 )
             else:
-                from helpers.osuAPI import getBeatmap
+                from helpers.osuAPI import getBeatmap, mostCommonMode
                 data = await getBeatmap(id)
-                await cursor.execute("INSERT OR IGNORE INTO beatmapsets VALUES (?, ?, ?, ?, ?, ?)",
+                mostCommonGamemode = await mostCommonMode(data)
+                await cursor.execute("INSERT OR IGNORE INTO beatmapsets VALUES (?, ?, ?, ?, ?, ?, ?)",
                     (
                         id,
                         data["title"],
                         data["artist"],
                         data["creator"],
                         data["submitted_date"],
-                        data["ranked_date"]
+                        data["ranked_date"],
+                        mostCommonGamemode
                     )
                 )
                 title = data["title"]
