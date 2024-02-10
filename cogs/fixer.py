@@ -51,8 +51,12 @@ class Fixer(commands.Cog):
         if not config.enabled:
             return
         
-        if message.channel.nsfw and config.nsfwAllowed != True:
-            return
+        # A message sent in a thread gives an error because threads cant be nsfw 
+        try:
+            if message.channel.nsfw and config.nsfwAllowed != True:
+                return
+        except AttributeError:
+            pass
         
         if re.search("nofix", message.content, re.IGNORECASE):
             return
