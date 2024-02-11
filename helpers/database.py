@@ -6,7 +6,7 @@ from typing import Optional
 
 config = Config.getMainInstance()
 
-DATABASE = "./database.db"
+DATABASE = "./persistent/database.db"
 
 async def createTables():
    async with aiosqlite.connect(DATABASE) as db:

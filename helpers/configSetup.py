@@ -19,7 +19,7 @@ class Config:
         else:
             raise Exception("An instance of Config already exists. Use Config.get_instance() to access it.")
 
-    def __init__(self, path="config.json"):
+    def __init__(self, path="./persistent/config.json"):
         if not hasattr(self, "initialized"):
             self.path = path
             self.load()

@@ -1,12 +1,20 @@
 version: '1'
 services:
-  embed-fixer:
+  bot:
     build: .
     restart: unless-stopped
     environment:
-      # Don't use quotation marks
-      - TOKEN=your bot token here
-      - ADMIN=your discord userid here
-      - QOUTECHANNELID=
+      - TOKEN=
+      - OSUSECRET=
+      - CLIENTID=
+      - ADMIN=
+      - QUOTECHANNELID=
+      - MODCHANNEL=
+      - OSUCHANNEL=
     env_file:
       - .env
+    volumes:
+      - persistent:/bot/persistent
+
+volumes:
+  persistent:

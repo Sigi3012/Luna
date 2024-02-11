@@ -1,5 +1,5 @@
 {
-    "enabled": false,
+    "enabled": true,
     "totalFixed": 0,
     "timeoutTime": 60,
     "cooldownMinutes": 10,
