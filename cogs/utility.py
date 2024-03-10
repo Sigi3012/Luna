@@ -1,7 +1,9 @@
+import discord
 from discord.ext import commands
 from discord import app_commands
 from helpers.checks import missingPermissions
 from main import Config
+from datetime import datetime
 import time
 
 # This cog is for general commands eg. shutdown, toggle, status
@@ -71,6 +73,36 @@ class Utility(commands.Cog):
     async def ping(self, interaction):
         latency = self.client.latency
         await interaction.response.send_message(f"My latency is: {round(latency, 1)}ms!")
+     
+    @commands.command()
+    async def userbanner(self, ctx: commands.Context, member: discord.Member = None):
+        if member is None:
+            member = ctx.author
+        
+        member = await self.client.fetch_user(member.id)
+
+        if member.banner is None:
+            await ctx.reply(content = f"<@{member.id}> has no banner!")
+        else:
+            embed = discord.Embed(
+                timestamp = datetime.now()
+            )
+            embed.set_image(url = member.banner.url)
+            await ctx.reply(embed = embed)
+            
+    @commands.command()
+    async def userpfp(self, ctx: commands.Context, member: discord.Member = None):
+        if member is None:
+            member = ctx.author
+      
+        if member.avatar is None:
+            await ctx.reply(content = f"<@{member.id}> has a default pfp!")
+        else:
+            embed = discord.Embed(
+                timestamp = datetime.now()
+            )
+            embed.set_image(url = member.avatar.url)
+            await ctx.reply(embed = embed)
 
 # --------- #
 
