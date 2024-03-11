@@ -9,7 +9,7 @@ from helpers.checks import missingPermissions
 
 import asyncio
 
-from typing import List
+from typing import List, Literal
 
 from datetime import datetime
 from calendar import timegm
@@ -139,17 +139,16 @@ class Maps(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.mapfeed.start()
         print(f"Cog: {__name__} has loaded")
 
     async def cog_unload(self):
-        self.mapfeed.cancel()
+        self.mapfeedTask.cancel()
         
     @tasks.loop(minutes = MAPFEEDUPDATECOOLDOWN)
-    async def mapfeed(self):
+    async def mapfeedTask(self):
         await self.updateMapFeed()
     
-    @mapfeed.before_loop
+    @mapfeedTask.before_loop
     async def beforeMapfeed(self):
         await self.client.wait_until_ready()
     
@@ -224,6 +223,36 @@ class Maps(commands.Cog):
             await interaction.response.send_message(f"Deleted {id} successfully!")
         else:
             await missingPermissions(interaction)
+            
+    @app_commands.command(name = "mapfeed", description = "Controls for the osu!mapfeed")
+    async def mapfeed(self, interaction: discord.Interaction, option: Literal["Start", "Stop", "Status"]):
+        if interaction.user.id == int(config.admin):
+            state = self.mapfeedTask.is_running()
+            
+            async def reply():
+                await interaction.response.send_message("Successful", ephemeral = True)
+            
+            if option == "Start":
+                if state == True:
+                    await interaction.response.send_message(f"The task is already started!", ephemeral = True)
+                else:
+                    self.mapfeedTask.start()
+                    print("[TASK][INFO] Mapfeed started")
+                    await reply()
+                    
+                    
+            if option == "Stop":
+                if state == False:
+                    await interaction.response.send_message(f"The task is already stopped!", ephemeral = True)
+                else:
+                    self.mapfeedTask.stop()
+                    print("[TASK][INFO] Mapfeed stopped")
+                    await reply()
+                    
+            if option == "Status":
+                await interaction.response.send_message(state, ephemeral = True)
+        else:
+            missingPermissions(interaction)
     
 # --------- #
 
