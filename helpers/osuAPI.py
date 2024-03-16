@@ -7,7 +7,6 @@ from main import Config
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List
-import json
 
 from statistics import StatisticsError, mode
 
