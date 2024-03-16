@@ -1,7 +1,13 @@
+from __future__ import annotations
+
 import aiohttp
 import socket
 from main import Config
-from helpers.database import insertBeatmapData
+
+from pydantic import BaseModel
+from datetime import datetime
+from typing import List
+import json
 
 from statistics import StatisticsError, mode
 
@@ -13,6 +19,26 @@ CLIENTSECRET = config.osusecret
 CLIENTID = config.clientid
 
 accessToken = None
+
+class NestedBeatmap(BaseModel):
+    starRating: float
+
+class ApiResponse(BaseModel):
+    beatmapsetId: int
+    
+    title: str
+    artist: str
+    mapper: str
+    
+    status: int
+    
+    submittedDate: datetime
+    statusChangedDate: datetime
+    
+    mostCommonMode: str
+    
+    beatmaps: List[NestedBeatmap]
+    
 
 async def authenticate():
     print("[API][INFO] Trying to authenticate...")
@@ -33,7 +59,7 @@ async def authenticate():
                 accessToken = json["access_token"]
                 
                 print("[API][INFO] Successfully authenticated")
-                return(json["access_token"])
+                return json["access_token"]
                 
             except Exception as e:
                 print(f"[API][ERROR] Something went wrong while accessing the osu!API\n{e}")
@@ -41,8 +67,21 @@ async def authenticate():
     except aiohttp.ClientError as e:
         print(f"[AIOHTTP][ERROR] Something went wrong with the client\n{e}")
         return None
+    
+async def mostCommonMode(modes: List[str]):
+    try:
+        result = mode(modes)
+        
+        if result == "osu":
+            return "standard"
+        elif result == "fruits":
+            return "catch"
+        else:
+            return result
+    except StatisticsError:
+        return None
 
-async def getBeatmap(id):
+async def getBeatmap(id: int) -> ApiResponse | None:
     print("[API][INFO] Trying to get beatmap information...")
     
     try:
@@ -60,7 +99,27 @@ async def getBeatmap(id):
                 if response.status == 200:
                     print("[API][INFO] Successfully got beatmap data")
                     data = await response.json()
-                    return(data)
+                    
+                    nested = []
+                    for beatmap in data["beatmaps"]:
+                        nest = NestedBeatmap(
+                            starRating = beatmap["difficulty_rating"]
+                        )
+                        nested.append(nest)
+                    
+                    mappedData = ApiResponse(
+                        beatmapsetId = data["id"],
+                        title = data["title"],
+                        artist = data["artist"],
+                        mapper = data["creator"],
+                        status = data["ranked"],
+                        submittedDate = data["submitted_date"],
+                        statusChangedDate = data["ranked_date"],
+                        mostCommonMode = await mostCommonMode([beatmap["mode"] for beatmap in data["beatmaps"]]),
+                        beatmaps = nested
+                    )
+                    
+                    return mappedData
                 
                 if response.status == 401:
                     print("[API][WARN] HTTP 401, Reauthenticating")
@@ -91,15 +150,11 @@ async def populateDatabase():
                     print("[API][INFO] Successfully got beatmap json")
                     json = await response.json()
                     
+                    from helpers.database import insertBeatmapData
                     for beatmap in json["beatmapsets"]:
                         await insertBeatmapData(
                             beatmap["id"],
-                            beatmap["title"],
-                            beatmap["artist"],
-                            beatmap["creator"],
-                            beatmap["submitted_date"],
-                            beatmap["ranked_date"],
-                            await mostCommonMode(beatmap)
+                            beatmap["ranked_date"]
                         )
                     
                     print(json["cursor_string"])
@@ -117,7 +172,7 @@ async def populateDatabase():
                 
     cursorString = await getMaps()
 
-    while cursorString != None:
+    while cursorString is not None:
         cursorString = await getMaps(cursorString)
 
 async def getAllQualifiedIds():
@@ -157,26 +212,7 @@ async def getAllQualifiedIds():
         
     cursorString = await getMaps()
 
-    while cursorString != None:
+    while cursorString is not None:
         cursorString = await getMaps(cursorString)
     
     return ids
-
-async def mostCommonMode(data):
-    """
-    """
-    list = []
-    for beatmap in data["beatmaps"]:
-        list.append(beatmap["mode"])
-    
-    try:
-        result = mode(list)
-        
-        if result == "osu":
-            return "standard"
-        elif result == "fruits":
-            return "catch"
-        else:
-            return result
-    except StatisticsError:
-        return None

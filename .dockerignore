@@ -2,3 +2,4 @@ __pycache__/
 cogs/__pycache__/*
 helpers/__pycache__/*
 .git/
+.idea

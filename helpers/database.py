@@ -1,8 +1,7 @@
 import aiosqlite
 import time
 from main import Config
-
-from typing import Optional
+from helpers.osuAPI import ApiResponse
 
 config = Config.getMainInstance()
 
@@ -21,13 +20,8 @@ async def createTables():
        # Create beatmapsets table
        await db.execute("""
             CREATE TABLE IF NOT EXISTS beatmapsets (
-                beatmapId INTERGER NOT NULL,
-                title TEXT,
-                artist TEXT,
-                creatorName TEXT,
-                submittedDate TIMESTAMP,
-                qualifiedDate TIMESTAMP,
-                mostCommonGamemode TEXT
+                beatmapsetId INTEGER NOT NULL,
+                statusChangeDate TIMESTAMP
            )
        """)
        
@@ -54,53 +48,24 @@ async def checkCooldown(userId):
        await db.commit()
        return 0
    
-async def insertBeatmapData(
-    id: int,
-    title: Optional[str] = None,
-    artist: Optional[str] = None,
-    creatorName: Optional[str] = None,
-    submittedDate: Optional[str] = None,
-    qualifiedDate: Optional[str] = None,
-    mostCommonGamemode: Optional[str] = None
-    ):
+async def insertBeatmapsetData(mappedData: ApiResponse):
     async with aiosqlite.connect(DATABASE) as db:
         cursor = await db.cursor()
         
         try:
-            existingEntry = await cursor.execute("SELECT * FROM beatmapsets WHERE beatmapId = ?", (id,))
+            existingEntry = await cursor.execute("SELECT * FROM beatmapsets WHERE beatmapsetId = ?", (mappedData.beatmapsetId,))
             
             if await existingEntry.fetchone() is not None:
-                print(f"[DATABASE][INFO] beatmapId {id} already exists. Skipping insertion.")
+                print(f"[DATABASE][INFO] beatmapsetId {mappedData.beatmapsetId} already exists. Skipping insertion.")
                 return
             
-            if title is not None:
-                await cursor.execute("INSERT OR IGNORE INTO beatmapsets VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (
-                    id,
-                    title,
-                    artist,
-                    creatorName,
-                    submittedDate,
-                    qualifiedDate,
-                    mostCommonGamemode
-                    )
+            await cursor.execute("INSERT OR IGNORE INTO beatmapsets VALUES (?, ?)",
+                (
+                    mappedData.beatmapsetId,
+                    mappedData.statusChangedDate
                 )
-            else:
-                from helpers.osuAPI import getBeatmap, mostCommonMode
-                data = await getBeatmap(id)
-                mostCommonGamemode = await mostCommonMode(data)
-                await cursor.execute("INSERT OR IGNORE INTO beatmapsets VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (
-                        id,
-                        data["title"],
-                        data["artist"],
-                        data["creator"],
-                        data["submitted_date"],
-                        data["ranked_date"],
-                        mostCommonGamemode
-                    )
-                )
-                title = data["title"]
+            )
+            title = mappedData.title
         
         except Exception as e:
             print(f"[DATABASE][ERROR] Something went wrong while inserting data\n{e}")
@@ -114,7 +79,7 @@ async def deleteBeatmapEntry(id: int):
     async with aiosqlite.connect(DATABASE) as db:
         cursor = await db.cursor()
         try:
-            await cursor.execute("DELETE FROM beatmapsets WHERE beatmapId = ?", (id,))
+            await cursor.execute("DELETE FROM beatmapsets WHERE beatmapsetId = ?", (id,))
             await db.commit()
             print(f"[DATABASE][INFO] Successfully deleted {id}")
         
@@ -125,7 +90,7 @@ async def getDatabaseEntry(id: int):
     async with aiosqlite.connect(DATABASE) as db:
         cursor = await db.cursor()
         try:
-            selection = await cursor.execute("SELECT * FROM beatmapsets WHERE beatmapId = ?", (id,))
+            selection = await cursor.execute("SELECT * FROM beatmapsets WHERE beatmapsetId = ?", (id,))
             data = await selection.fetchone()
             
             if data is None:
@@ -142,9 +107,9 @@ async def getAllDatabaseIds():
     async with aiosqlite.connect(DATABASE) as db:
         cursor = await db.cursor()
         try:
-            selection = await cursor.execute("SELECT beatmapid FROM beatmapsets")
+            selection = await cursor.execute("SELECT beatmapsetId FROM beatmapsets")
             ids = await selection.fetchall()
-            print("[DATABASE][INFO] Successfully fetched all beatmapids")
+            print("[DATABASE][INFO] Successfully fetched all beatmapsetIds")
             return [id[0] for id in ids]
         except Exception as e:
             print(f"[DATABASE][ERROR] Something went wrong while fetching ids\n{e}")

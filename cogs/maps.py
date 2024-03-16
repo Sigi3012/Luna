@@ -1,18 +1,20 @@
+from __future__ import annotations
+
 import discord
 from discord.ext import commands, tasks
 from discord import app_commands
 
 from main import Config
-from helpers.osuAPI import authenticate, getBeatmap, populateDatabase, getAllQualifiedIds, mostCommonMode
-from helpers.database import insertBeatmapData, deleteBeatmapEntry, getDatabaseEntry, getAllDatabaseIds
+from helpers.osuAPI import ApiResponse, authenticate, getBeatmap, populateDatabase, getAllQualifiedIds
+from helpers.database import insertBeatmapsetData, deleteBeatmapEntry, getAllDatabaseIds
 from helpers.checks import missingPermissions
 
 import asyncio
 
 from typing import List, Literal
 
+import time
 from datetime import datetime
-from calendar import timegm
 
 config = Config.getMainInstance()
 osuChannel = int(config.osuchannel)
@@ -21,7 +23,7 @@ MAPFEEDUPDATECOOLDOWN = 30 # Minutes
 
 # --------- #
 
-async def buildEmbed(id: int, status: int = 3):
+async def buildEmbed(mappedData: ApiResponse) -> discord.Embed | None:
     """
     This function returns the discord.Embed object
     Params:
@@ -31,31 +33,6 @@ async def buildEmbed(id: int, status: int = 3):
         
     Checks database if the id is in it, if not then osuAPI.py getBeatmap is ran
     """
-    response = await getDatabaseEntry(id)
-
-    if response == None or status == None:
-        responseData = await getBeatmap(id)
-
-        data = []
-
-        data.append(responseData["id"])
-        data.append(responseData["title"])
-        data.append(responseData["artist"])
-        data.append(responseData["creator"])
-        data.append(responseData["submitted_date"])
-        data.append(responseData["ranked_date"])
-        data.append(await mostCommonMode(responseData))
-    
-        status = responseData["ranked"]
-    else:
-        data = list(response)
-    
-    title = data[1]
-    artist = data[2]
-    creatorName = data[3]
-    submittedDate = data[4]
-    statusChangeDate = data[5]
-    mostCommonGamemode = data[6]
     
     # --------- #
     
@@ -79,22 +56,23 @@ async def buildEmbed(id: int, status: int = 3):
     }
     
     try:
-        beatmapStatus = beatmapStatuses[status]
+        beatmapStatus = beatmapStatuses[mappedData.status]
     except Exception as e:
         print(f"Genuinely how did this happen.. Error: {e}")
         return None
     
     # --------- #
     
-    submittedDatetime = datetime.strptime(submittedDate, "%Y-%m-%dT%H:%M:%SZ")
-    submittedUnix = timegm(submittedDatetime.utctimetuple())
+    submittedUnix = int(time.mktime(mappedData.submittedDate.timetuple()))
     
     # This means the status has gone back to pending
-    if statusChangeDate is None:
+    if mappedData.statusChangedDate is None:
         statusChangeUnix = ""
     else:
-        statusChangeDatetime = datetime.strptime(statusChangeDate, "%Y-%m-%dT%H:%M:%SZ")
-        statusChangeUnix = f"<t:{timegm(statusChangeDatetime.utctimetuple())}:R>" 
+        statusChangeUnix = f"<t:{int(time.mktime(mappedData.statusChangedDate.timetuple()))}:R>" 
+        
+    print(submittedUnix)
+    print(statusChangeUnix)
     
     # --------- #
     
@@ -118,16 +96,16 @@ async def buildEmbed(id: int, status: int = 3):
     
     # Looks like this https://imgur.com/a/AIQpgOG
     embed = discord.Embed(
-        description = f"**[{title}](https://osu.ppy.sh/beatmapsets/{id})** | **{beatmapStatus} {statusChangeUnix}**\n"
-                      f"Mapped by [{creatorName}](https://osu.ppy.sh/users/{await replaceSpaces(creatorName)}) | [osu!{mostCommonGamemode}]\n"
-                      f"Artist: {artist}\n"
+        description = f"**[{mappedData.title}](https://osu.ppy.sh/beatmapsets/{mappedData.beatmapsetId})** | **{beatmapStatus} {statusChangeUnix}**\n"
+                      f"Mapped by [{mappedData.mapper}](https://osu.ppy.sh/users/{await replaceSpaces(mappedData.mapper)}) | [osu!{mappedData.mostCommonMode}]\n"
+                      f"Artist: {mappedData.artist}\n"
                       f"Submitted: <t:{submittedUnix}:R>",
         colour = embedColour,
     )
-    embed.set_image(url = f"https://assets.ppy.sh/beatmaps/{id}/covers/card.jpg")
+    embed.set_image(url = f"https://assets.ppy.sh/beatmaps/{mappedData.beatmapsetId}/covers/card.jpg")
     embed.set_footer(text = f"Made by @.Sigi")
     
-    print(f"Title: {title}\nArtist: {artist}\nCreator name: {creatorName}\nSubmitted date: {submittedDate}\nQualified Date: {statusChangeDate}\nBeatmap stauts: {beatmapStatus}")
+    print(f"Title: {mappedData.title}\nArtist: {mappedData.artist}\nCreator name: {mappedData.mapper}\nSubmitted date: {mappedData.submittedDate}\nQualified Date: {mappedData.statusChangedDate}\nBeatmap status: {beatmapStatus}")
 
     return embed
 
@@ -157,7 +135,9 @@ class Maps(commands.Cog):
         Flow chart: https://imgur.com/a/fAlHfE4
         This implementation does not follow the flow chart exactly.
         """
+        #calls once
         qualifiedIds = await getAllQualifiedIds()
+        
         databaseIds = await getAllDatabaseIds()
         
         if qualifiedIds is None or databaseIds is None:
@@ -179,15 +159,21 @@ class Maps(commands.Cog):
         
         async def processNewMaps(ids: List[int]):
             for id in ids:
-                embed = await buildEmbed(id)
-                await insertBeatmapData(id)
+                data: ApiResponse = await getBeatmap(id)
+                
+                embed = await buildEmbed(data)        
                 await channel.send(embed = embed)
+                
+                await insertBeatmapsetData(data)
         
         async def processChangedMaps(ids: List[int]):
             for id in ids:
-                embed = await buildEmbed(id, status = None)
-                await deleteBeatmapEntry(id)
+                data: ApiResponse = await getBeatmap(id)
+
+                embed = await buildEmbed(data)
                 await channel.send(embed = embed)
+                
+                await deleteBeatmapEntry(data.beatmapsetId)
 
         await asyncio.gather(
             processNewMaps(newMaps),
@@ -201,7 +187,7 @@ class Maps(commands.Cog):
     async def auth(self, interaction: discord.Interaction):
         if interaction.user.id == int(config.admin):
             accessToken = await authenticate()
-            await interaction.response.send_message(accessToken, ephemeral = True)
+            await interaction.response.send_message(content = f"```{accessToken}```", ephemeral = True)
         else:
             await missingPermissions(interaction)
     
@@ -225,7 +211,7 @@ class Maps(commands.Cog):
             await missingPermissions(interaction)
             
     @app_commands.command(name = "mapfeed", description = "Controls for the osu!mapfeed")
-    async def mapfeed(self, interaction: discord.Interaction, option: Literal["Start", "Stop", "Status"]):
+    async def mapfeed(self, interaction: discord.Interaction, option: Literal["Start", "Stop", "Restart", "Force", "Status"]):
         if interaction.user.id == int(config.admin):
             state = self.mapfeedTask.is_running()
             
@@ -239,21 +225,36 @@ class Maps(commands.Cog):
                     self.mapfeedTask.start()
                     print("[TASK][INFO] Mapfeed started")
                     await reply()
-                    
-                    
+
             if option == "Stop":
                 if state == False:
                     await interaction.response.send_message(f"The task is already stopped!", ephemeral = True)
                 else:
-                    self.mapfeedTask.stop()
+                    self.mapfeedTask.cancel()
                     print("[TASK][INFO] Mapfeed stopped")
                     await reply()
                     
+            if option == "Restart":
+                self.mapfeedTask.restart()
+                print("[TASK][INFO] Mapfeed restarted")
+                await reply()
+
+            if option == "Force":
+                await self.updateMapFeed()
+                print("[TASK][INFO] Mapfeed force refreshed")
+                await reply()
+            
             if option == "Status":
                 await interaction.response.send_message(state, ephemeral = True)
         else:
             missingPermissions(interaction)
     
+    @commands.is_owner()      
+    @commands.command()
+    async def getmap(self, ctx: commands.Context, id):
+        data = await getBeatmap(id)
+        await ctx.reply(data)
+            
 # --------- #
 
 async def setup(client:commands.Bot) -> None:
