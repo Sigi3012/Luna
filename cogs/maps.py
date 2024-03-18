@@ -70,9 +70,18 @@ async def buildEmbed(mappedData: ApiResponse) -> discord.Embed | None:
         statusChangeUnix = ""
     else:
         statusChangeUnix = f"<t:{int(time.mktime(mappedData.statusChangedDate.timetuple()))}:R>" 
+    
+    # --------- #
         
-    print(submittedUnix)
-    print(statusChangeUnix)
+    starRating = [beatmap.starRating for beatmap in mappedData.beatmaps]
+    
+    lowestStarRating: float = min(starRating)
+    highestStarRating: float = max(starRating)
+    
+    displayStarRating = f"{lowestStarRating} - {highestStarRating} \U00002605"
+    
+    if lowestStarRating == highestStarRating:
+        displayStarRating = highestStarRating
     
     # --------- #
     
@@ -99,7 +108,8 @@ async def buildEmbed(mappedData: ApiResponse) -> discord.Embed | None:
         description = f"**[{mappedData.title}](https://osu.ppy.sh/beatmapsets/{mappedData.beatmapsetId})** | **{beatmapStatus} {statusChangeUnix}**\n"
                       f"Mapped by [{mappedData.mapper}](https://osu.ppy.sh/users/{await replaceSpaces(mappedData.mapper)}) | [osu!{mappedData.mostCommonMode}]\n"
                       f"Artist: {mappedData.artist}\n"
-                      f"Submitted: <t:{submittedUnix}:R>",
+                      f"Submitted: <t:{submittedUnix}:R>\n"
+                      f"\n{displayStarRating} \U00002022 {len(mappedData.beatmaps)} Difficulties",
         colour = embedColour,
     )
     embed.set_image(url = f"https://assets.ppy.sh/beatmaps/{mappedData.beatmapsetId}/covers/card.jpg")

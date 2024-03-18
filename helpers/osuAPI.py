@@ -6,7 +6,7 @@ from main import Config
 
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
 from statistics import StatisticsError, mode
 
@@ -32,7 +32,7 @@ class ApiResponse(BaseModel):
     status: int
     
     submittedDate: datetime
-    statusChangedDate: datetime
+    statusChangedDate: Union[datetime, None] # in-built type union does not work here
     
     mostCommonMode: str
     
