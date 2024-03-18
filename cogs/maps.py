@@ -80,8 +80,9 @@ async def buildEmbed(mappedData: ApiResponse) -> discord.Embed | None:
     
     displayStarRating = f"{lowestStarRating} - {highestStarRating} \U00002605"
     
+    # Formatting for if there is only a single difficulty
     if lowestStarRating == highestStarRating:
-        displayStarRating = highestStarRating
+        displayStarRating = f"{highestStarRating} \U00002605"
     
     # --------- #
     
