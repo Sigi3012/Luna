@@ -3,6 +3,7 @@ from datetime import datetime
 from random import randint
 
 import aiohttp
+import socket
 import discord
 from discord.ext import commands
 
@@ -79,12 +80,12 @@ class Misc(commands.Cog):
             aftervalue = value
 
         e = discord.Embed(
-            title=action,
-            description=f"{targetString}Before: {beforekey} = {beforevalue}\nAfter: {afterkey} = {aftervalue}",
-            colour=0x383CC6,
-            timestamp=datetime.now(),
+            title = action,
+            description = f"{targetString}Before: {beforekey} = {beforevalue}\nAfter: {afterkey} = {aftervalue}",
+            colour = 0x383CC6,
+            timestamp = datetime.now(),
         )
-        e.set_author(name=user.global_name, icon_url=user.avatar.url)
+        e.set_author(name = user.global_name, icon_url = user.avatar.url)
         await self.moderationChannel.send(embed=e)
 
     # --------- #
@@ -105,29 +106,23 @@ class Misc(commands.Cog):
             entry.action.name, entry.user, entry.before, entry.after, entry.target
         )
 
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.author == self.client.user:
-            return
-
-        if message.content == "!gay":
-            # 482 is the last page of the tag yuri+2girls, tested via hoppscotch
-            pageNumber = randint(1, 482)
-
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"https://safebooru.org/index.php?page=dapi&s=post&q=index&pid={pageNumber}&limit=100&tags=yuri+2girls"
-                ) as res:
-                    print(res.status)
-                    if res.status == 200:
-                        XML = await res.text()
-                        parsedXML = xml.parseString(XML)
-                        postElement = parsedXML.getElementsByTagName("post")[
-                            randint(1, 100)
-                        ]
-                        await message.reply(postElement.getAttribute("file_url"))
-                    else:
-                        await message.reply("something went wrong")
+    @commands.command(aliases = ["gay"])
+    async def yuri(self, ctx: commands.Context):
+        # 482 is the last page of the tag yuri+2girls, tested via hoppscotch
+        pageNumber = randint(1, 482)
+        url = f"https://safebooru.org/index.php?page=dapi&s=post&q=index&pid={pageNumber}&limit=100&tags=yuri+2girls" 
+        
+        connector = aiohttp.TCPConnector(family = socket.AF_INET)
+        async with aiohttp.ClientSession(connector = connector) as session:
+            response = await session.get(url)
+             
+            if response.status == 200:
+                XML = await response.text()
+                parsedXML = xml.parseString(XML)
+                postElement = parsedXML.getElementsByTagName("post")[randint(1, 100)]
+                await ctx.reply(postElement.getAttribute("file_url"))
+            else:
+                await ctx.reply("Something went wrong!")
 
 
 # --------- #
@@ -135,3 +130,4 @@ class Misc(commands.Cog):
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(Misc(client))
+
