@@ -78,11 +78,11 @@ async def buildEmbed(mappedData: ApiResponse) -> discord.Embed | None:
     lowestStarRating: float = min(starRating)
     highestStarRating: float = max(starRating)
     
-    displayStarRating = f"{lowestStarRating} - {highestStarRating} \U00002605"
+    displayStarRating = f"{lowestStarRating} - {highestStarRating} \U00002605 \U00002022 {len(mappedData.beatmaps)} Difficulties"
     
     # Formatting for if there is only a single difficulty
     if lowestStarRating == highestStarRating:
-        displayStarRating = f"{highestStarRating} \U00002605"
+        displayStarRating = f"{highestStarRating} \U00002605 \U00002022 1 Difficulty"
     
     # --------- #
     
@@ -110,7 +110,7 @@ async def buildEmbed(mappedData: ApiResponse) -> discord.Embed | None:
                       f"Mapped by [{mappedData.mapper}](https://osu.ppy.sh/users/{await replaceSpaces(mappedData.mapper)}) | [osu!{mappedData.mostCommonMode}]\n"
                       f"Artist: {mappedData.artist}\n"
                       f"Submitted: <t:{submittedUnix}:R>\n"
-                      f"\n{displayStarRating} \U00002022 {len(mappedData.beatmaps)} Difficulties",
+                      f"\n{displayStarRating}",
         colour = embedColour,
     )
     embed.set_image(url = f"https://assets.ppy.sh/beatmaps/{mappedData.beatmapsetId}/covers/card.jpg")
