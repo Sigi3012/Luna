@@ -19,7 +19,14 @@ config = Config.getMainInstance()
 remoteHost: str = "http://127.0.0.1:727"
 secretKey: str = "secret"
 enabled: bool = True
-channel: int = 0
+channel: int = 1224504691686113281
+
+# TODO 
+# add prompt with the final sent message 1
+# ability to change default settings (admin) 2
+# blacklist users (admin) 3
+# command cooldown (already kinda implemented) 4
+
 
 class ApiException(Exception):
     def __init__(self, m):
@@ -92,7 +99,7 @@ class InputForm(ui.Modal, title = "Generate an image!"):
         try:
             instance = await Ai.getInstance()
             channel = await instance.getChannel(id = interaction.channel_id)
-            await channel.send(content = f"<@{interaction.user.id}>", file = discord.File(f"./cache/{interaction.user.id}/aiOutput.png"))
+            await channel.send(content = f"<@{interaction.user.id}>\n```Prompt: {str(self.prompt)[:50]}...\nNegative Prompt: {str(self.negativePrompt)[:50]}...```", file = discord.File(f"./cache/{interaction.user.id}/aiOutput.png"))
             print(f"[AI][INFO] Successfully sent image to {interaction.channel_id}")
         except Exception as e:
             print(f"[AI][ERROR] Something went wrong! Error: {e}")
@@ -178,8 +185,8 @@ class Ai(commands.Cog):
                 else:
                     await interaction.response.send_message(content = "Please set a host and secret key", ephemeral = True)
             if option == "False":
-                enabled == False
-                channel == 0
+                enabled = False
+                channel = 0
                 try:
                     connector = aiohttp.TCPConnector(family = socket.AF_INET)
                     headers = {
