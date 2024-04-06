@@ -10,8 +10,9 @@ import socket
 
 import os
 import base64
+from datetime import datetime
 
-from typing import Literal
+from typing import Literal, Optional
 
 config = Config.getMainInstance()
 
@@ -38,7 +39,7 @@ async def fetchImage(payload):
                 json = await response.json()
                 return json
             else:
-                raise ApiException(f"{response.status}: Error while contacting api")
+                raise ApiException(f"[AI][ERROR] {response.status}: Error while contacting api")
 
 def handleDecode(userId: int, response):
     if not os.path.exists(path = f"./cache/{userId}"):
@@ -47,7 +48,17 @@ def handleDecode(userId: int, response):
     with open(f"./cache/{userId}/aiOutput.png", "wb") as file:
         try:
             file.write(base64.b64decode(response["images"][0]))
-            print("successfully wrote to file")
+            print("[AI][INFO] Successfully wrote bytes to image")
+        except Exception as e:
+            print(e)
+            
+async def handleLogging(userId: int, prompt: str, negativePrompt: Optional[str]):
+    # Meant to be ran AFTER handleDecode()
+    
+    with open(f"./cache/{userId}/promptLog.txt", "a") as file:
+        try:
+            file.write(f"Prompt: {prompt}\nNegative Prompt: {negativePrompt}\nTimestamp: {datetime.now()}\n\n")
+            print("[AI][INFO] Successfully wrote to log")
         except Exception as e:
             print(e)
 
@@ -58,11 +69,13 @@ class InputForm(ui.Modal, title = "Generate an image!"):
     negativePrompt = ui.TextInput(label = "Negative Prompt", placeholder = "bad quality, worst quality", required = False)
     
     async def on_submit(self, interaction: discord.Interaction):
-        print("submitted")
         payload = {
             "prompt": str(self.prompt),
             "negativePrompt": str(self.negativePrompt)
         }
+        
+        print("[AI][INFO] Attempting to generate image")
+        print(payload)
         
         try:
             await interaction.response.send_message(content = "Please wait..", ephemeral = True, delete_after = 5)
@@ -71,12 +84,18 @@ class InputForm(ui.Modal, title = "Generate an image!"):
             await interaction.response.send_message(content = e, ephemeral = True)
             return
 
-        handleDecode(interaction.user.id, res)
-
-        print(interaction.channel_id)
-        instance = await Ai.getInstance()
-        channel = await instance.getChannel(id = interaction.channel_id)
-        await channel.send(content = f"<@{interaction.user.id}>", file = discord.File(f"./cache/{interaction.user.id}/aiOutput.png"))
+        userId = interaction.user.id
+        
+        handleDecode(userId, res)
+        await handleLogging(userId, str(self.prompt), str(self.negativePrompt))
+        
+        try:
+            instance = await Ai.getInstance()
+            channel = await instance.getChannel(id = interaction.channel_id)
+            await channel.send(content = f"<@{interaction.user.id}>", file = discord.File(f"./cache/{interaction.user.id}/aiOutput.png"))
+            print(f"[AI][INFO] Successfully sent image to {interaction.channel_id}")
+        except Exception as e:
+            print(f"[AI][ERROR] Something went wrong! Error: {e}")
         
 class SetupForm(ui.Modal, title = "Setup"):
     host = ui.TextInput(label="Host", placeholder = "127.0.0.1:3000", required = True)
@@ -87,6 +106,7 @@ class SetupForm(ui.Modal, title = "Setup"):
         global secretKey
         remoteHost = str(self.host)
         secretKey = str(self.secret)
+        print(f"[AI][INFO] Set host to: {self.host}\nSet secret to {str(self.secret)}")
         await interaction.response.send_message(f"```Set host to: {self.host}\nSet secret to {str(self.secret)[:5]}...```", ephemeral = True)
        
 # --------- #
@@ -121,9 +141,13 @@ class Ai(commands.Cog):
     
     @generate.command(name = "image", description = "Generates an image!")
     async def generateImage(self, interaction: discord.Interaction):
+        if interaction.channel_id != channel:
+            await interaction.response.send_message("You cannot use that command here!")
+            return
+        
         await interaction.response.send_modal(InputForm())
 
-    @generate.command(name = "setup")            
+    @generate.command(name = "setup", description = "Sets up configuration")            
     async def setup(self, interaction: discord.Interaction):
         if interaction.user.id == int(config.admin):
             await interaction.response.send_modal(SetupForm())
@@ -132,24 +156,45 @@ class Ai(commands.Cog):
     
     @generate.command(name = "enabled")    
     async def enabled(self, interaction: discord.Interaction, option: Literal["True", "False"]):
-        if interaction.user.id == int(config.admin):
-            async def response(message = f"Switched to {option}"):
-                await interaction.response.send_message(content = message, ephemeral = True)
-                
+        if interaction.user.id == int(config.admin):    
             global enabled
             global channel
             
             if option == "True":
                 if remoteHost is not None and secretKey is not None:
-                    # TODO check host connection
+                    try:
+                        connector = aiohttp.TCPConnector(family = socket.AF_INET)
+                        async with aiohttp.ClientSession(connector = connector) as session:
+                            async with session.get(url = f"{remoteHost}/ping") as response:
+                                if response.status == 200:
+                                    pass
+                    except aiohttp.ClientConnectionError as e:
+                        await interaction.response.send_message(content = f"Connection refused\n```{e}```", ephemeral = True)
+                        return
+                    
                     enabled = True
-                    channel == interaction.channel_id
-                    await response()
+                    channel = interaction.channel_id
+                    await interaction.response.send_message(content = f"Successfully enabled in <#{channel}>", ephemeral = True)
                 else:
-                    await response(message = "Please set the host and secret key")
+                    await interaction.response.send_message(content = "Please set a host and secret key", ephemeral = True)
             if option == "False":
                 enabled == False
-                await response()
+                channel == 0
+                try:
+                    connector = aiohttp.TCPConnector(family = socket.AF_INET)
+                    headers = {
+                        "Authorization": "secret"
+                    }
+                    async with aiohttp.ClientSession(connector = connector, headers = headers) as session:
+                        async with session.delete(url = f"{remoteHost}/shutdown") as response:
+                            if response.status == 401:
+                                print(response)
+                            else:
+                                pass
+                except aiohttp.ClientConnectionError:
+                    # I couldnt figure out how to return and then close the elysiajs server after the reponse so oh well
+                    pass
+                await interaction.response.send_message(content = "Successfully disabled", ephemeral = True)
         else:
             await missingPermissions(interaction)
             
