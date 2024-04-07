@@ -40,8 +40,18 @@ class Luna(commands.Bot):
             await self.unload_extension("cogs.quotes")
         if config.osuchannel == "":
             await self.unload_extension("cogs.maps")
+        
+        if os.path.exists("./cogs/private"):
+            for ext in os.listdir("./cogs/private"):
+                if ext.endswith(".py"):
+                    await self.load_extension(f"cogs.private.{ext[:-3]}")
 
 client = Luna()
+
+@client.event
+async def on_command_error(ctx: commands.Context, error):
+    if isinstance(error, commands.NotOwner):
+        await ctx.reply("You cannot run this command!", ephemeral = True)
 
 # --------- #
 

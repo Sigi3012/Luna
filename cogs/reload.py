@@ -32,6 +32,45 @@ class Reload(commands.Cog):
                 await interaction.response.send_message(f"Failed to reload **{cog}**! See error below\n```{e}```", ephemeral = True)
         else:
             await missingPermissions(interaction)
+    
+    # Append "private." to load, unload or reload private cogs
+    @commands.is_owner()
+    @commands.command()
+    async def load(self, ctx: commands.Context, cog: str):
+        try:
+            await self.client.load_extension(name = f"cogs.{cog}")
+            await ctx.reply(f"Successfully loaded **{cog}**")
+            print(f"Successfully loaded {cog}")
+        except Exception as e:
+            await ctx.reply(f"Failed to load **{cog}**! See error below\n```{e}```")
+    
+    @commands.is_owner()
+    @commands.command()
+    async def unload(self, ctx: commands.Context, cog: str):
+        if cog == "reload":
+            await ctx.reply("You cannot unload this cog as it is a core cog")
+            return
+        
+        try:
+            await self.client.unload_extension(name = f"cogs.{cog}")
+            await ctx.reply(f"Successfully unloaded **{cog}**")
+            print(f"Successfully unloaded {cog}")
+        except Exception as e:
+            await ctx.reply(f"Failed to unload **{cog}**! See error below\n```{e}```")
+    
+    @commands.is_owner()
+    @commands.command()
+    async def reload(self, ctx: commands.Context, cog):
+        if cog == "reload":
+            await ctx.reply("You cannot unload this cog as it is a core cog")
+            return
+        
+        try:
+            await self.client.reload_extension(name = f"cogs.{cog}")
+            await ctx.reply(f"Successfully reloaded **{cog}**", ephemeral = True)
+            print(f"Successfully reloaded {cog}")
+        except Exception as e:
+            await ctx.reply(f"Failed to reload **{cog}**! See error below\n```{e}```")
 
 # --------- #
 
