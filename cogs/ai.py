@@ -10,6 +10,7 @@ import socket
 
 import os
 import base64
+
 from datetime import datetime
 
 from typing import Literal, Optional
@@ -21,9 +22,22 @@ secretKey: str = "secret"
 enabled: bool = True
 channel: int = 1224504691686113281
 
+defaultConfig = {
+    "steps": "25",
+    "height": "512",
+    "width": "512"
+}
+
+class _Configuration():
+    steps: int = 25
+    height: int = 512
+    width: int = 512
+
+    def __str__(self) -> str:
+        attributes = vars(self)
+        return "\n".join([f"{key}: {value}" for key, value in attributes.items()])
+ 
 # TODO 
-# add prompt with the final sent message 1
-# ability to change default settings (admin) 2
 # blacklist users (admin) 3
 # command cooldown (already kinda implemented) 4
 
@@ -78,7 +92,10 @@ class InputForm(ui.Modal, title = "Generate an image!"):
     async def on_submit(self, interaction: discord.Interaction):
         payload = {
             "prompt": str(self.prompt),
-            "negativePrompt": str(self.negativePrompt)
+            "negativePrompt": str(self.negativePrompt),
+            "steps": _Configuration.steps,
+            "height": _Configuration.height,
+            "width": _Configuration.width
         }
         
         print("[AI][INFO] Attempting to generate image")
@@ -99,7 +116,16 @@ class InputForm(ui.Modal, title = "Generate an image!"):
         try:
             instance = await Ai.getInstance()
             channel = await instance.getChannel(id = interaction.channel_id)
-            await channel.send(content = f"<@{interaction.user.id}>\n```Prompt: {str(self.prompt)[:50]}...\nNegative Prompt: {str(self.negativePrompt)[:50]}...```", file = discord.File(f"./cache/{interaction.user.id}/aiOutput.png"))
+
+            prompt = str(self.prompt)
+            negativePrompt = str(self.negativePrompt)
+
+            if len(prompt) > 50:
+                prompt = f"{prompt}..."
+            if len(negativePrompt) > 50:
+                negativePrompt = f"{negativePrompt}..."
+            
+            await channel.send(content = f"<@{interaction.user.id}>\n```Prompt: {prompt}\nNegative Prompt: {negativePrompt}```", file = discord.File(f"./cache/{interaction.user.id}/aiOutput.png"))
             print(f"[AI][INFO] Successfully sent image to {interaction.channel_id}")
         except Exception as e:
             print(f"[AI][ERROR] Something went wrong! Error: {e}")
@@ -115,6 +141,19 @@ class SetupForm(ui.Modal, title = "Setup"):
         secretKey = str(self.secret)
         print(f"[AI][INFO] Set host to: {self.host}\nSet secret to {str(self.secret)}")
         await interaction.response.send_message(f"```Set host to: {self.host}\nSet secret to {str(self.secret)[:5]}...```", ephemeral = True)
+        
+class ConfigurationForm(ui.Modal, title = "Change default prompt settings"):
+    steps = ui.TextInput(label = "Steps", placeholder = "25", required = True)
+    height = ui.TextInput(label = "Height", placeholder = "512", required = True)
+    width = ui.TextInput(label = "Width", placeholder = "512", required = True)
+    
+    async def on_submit(self, interaction: discord.Interaction):
+        _Configuration.steps = int(self.steps.value)
+        _Configuration.height = int(self.height.value)
+        _Configuration.width = int(self.width.value)
+       
+        print(f"[AI][INFO] Configuration updated to:\nSteps: {self.steps}\nHeight: {self.height}\nWidth: {self.width}")
+        await interaction.response.send_message(f"Set configuration to\n```Steps: {self.steps}\nHeight: {self.height}\nWidth: {self.width}```", ephemeral = True)
        
 # --------- #
 
@@ -204,6 +243,13 @@ class Ai(commands.Cog):
                 await interaction.response.send_message(content = "Successfully disabled", ephemeral = True)
         else:
             await missingPermissions(interaction)
+    
+    @generate.command(name = "configurate")
+    async def configurate(self, interaction: discord.Interaction):
+        if interaction.user.id == int(config.admin):
+           await interaction.response.send_modal(ConfigurationForm()) 
+        else:
+            await missingPermissions(interaction)
             
     # Testing only will be removed in release
     @commands.is_owner()
@@ -215,4 +261,4 @@ class Ai(commands.Cog):
 # --------- #
 
 async def setup(client:commands.Bot) -> None:
-    await client.add_cog(Ai(client))    
+    await client.add_cog(Ai(client)) 
