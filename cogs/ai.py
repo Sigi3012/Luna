@@ -1,15 +1,17 @@
 import discord
 from discord import app_commands, ui
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from main import Config
 from helpers.checks import missingPermissions
+from helpers.database import addToBlacklist, removeFromBlacklist, loadBlacklist
 
 import aiohttp
 import socket
 
 import os
 import base64
+import asyncio
 
 from datetime import datetime
 
@@ -22,23 +24,12 @@ secretKey: str = "secret"
 enabled: bool = True
 channel: int = 1224504691686113281
 
-defaultConfig = {
-    "steps": "25",
-    "height": "512",
-    "width": "512"
-}
-
 class _Configuration():
     steps: int = 25
     height: int = 512
     width: int = 512
 
-    def __str__(self) -> str:
-        attributes = vars(self)
-        return "\n".join([f"{key}: {value}" for key, value in attributes.items()])
- 
 # TODO 
-# blacklist users (admin) 3
 # command cooldown (already kinda implemented) 4
 
 
@@ -167,13 +158,45 @@ class Ai(commands.Cog):
         else:
             raise Exception("An instance of the client already exists.")
     
-    def __init__(self, client: commands.Bot):
+    async def async__init__(self, client: commands.Bot):
         self.client = client
+
+        blacklist = await loadBlacklist()
+        self.blacklistedUsers = blacklist
+
+    def __init__(self, client: commands.Bot):
+        asyncio.create_task(self.async__init__(client))
 
     @commands.Cog.listener()
     async def on_ready(self):
         print(f"Cog: {__name__} has loaded")
-    
+
+    async def handleBlacklist(self):
+        databaseIds = await loadBlacklist()
+        # If in local list not in db
+        newUsers = [a for a in self.blacklistedUsers if a not in databaseIds]
+        print(f"new users: {newUsers}")
+        # If in db not in local list
+        removedUsers = [b for b in databaseIds if b not in self.blacklistedUsers]
+        print(f"removed users: {removedUsers}")
+
+        for id in newUsers:
+            await addToBlacklist(id)
+
+        for id in removedUsers:
+            await removeFromBlacklist(id)
+
+    @tasks.loop(minutes=15)
+    async def blacklistTask(self):
+        try:
+            await self.handleBlacklist()
+        except Exception as e:
+            print("[TASK][ERROR] Something went wrong with the blacklist task loop, see error below.")
+            print(e)
+
+    async def cog_unload(self):
+        await self.handleBlacklist()
+
     @classmethod
     async def getInstance(cls):
         if not cls._instance:
@@ -189,6 +212,11 @@ class Ai(commands.Cog):
     async def generateImage(self, interaction: discord.Interaction):
         if interaction.channel_id != channel:
             await interaction.response.send_message("You cannot use that command here!")
+            return
+
+        if interaction.user.id in self.blacklistedUsers:
+            await interaction.response.send_message("You are not allowed to use this command", ephemeral = True)
+            print(f"[AI][INFO] A blacklisted user ({interaction.user.id}) tried to generate an image!")
             return
         
         await interaction.response.send_modal(InputForm())
@@ -250,12 +278,37 @@ class Ai(commands.Cog):
            await interaction.response.send_modal(ConfigurationForm()) 
         else:
             await missingPermissions(interaction)
+
+    @generate.command(name = "blacklist")
+    async def blacklist(self, interaction: discord.Interaction, mode: Literal["Add", "Remove"], userid: str):
+        if interaction.user.id == int(config.admin):
+            userId = int(userid)
+            if mode == "Add":
+                self.blacklistedUsers.append(userId)
+                await interaction.response.send_message(f"<@{userId}> has been added to the blacklist", ephemeral = True)
+            if mode == "Remove":
+                if userId not in self.blacklistedUsers:
+                    await interaction.response.send_message("This user is not in the blacklist", ephemeral = True)
+                self.blacklistedUsers.remove(userId)
+                await interaction.response.send_message(f"<@{userId}> has been removed from the blacklist", ephemeral = True)
+        else:
+            await missingPermissions(interaction)
+        
             
     # Testing only will be removed in release
     @commands.is_owner()
     @commands.command()
     async def teststatus(self, ctx: commands.Context):
-        await ctx.reply(f"remote host: {remoteHost}\nsecret key: {secretKey}\nenabled: {enabled}\nchannel: {channel}")
+        await ctx.reply(f"remote host: {remoteHost}\nsecret key: {secretKey}\nenabled: {enabled}\nchannel: {channel}\nblacklisted users: {self.blacklistedUsers}")
+
+    @commands.command()
+    async def forcesave(self, ctx: commands.Context):
+        await self.handleBlacklist()
+        await ctx.reply("done")
+
+    @commands.command()
+    async def forceload(self, ctx: commands.Context):
+        await ctx.reply(await loadBlacklist())
     
 
 # --------- #
