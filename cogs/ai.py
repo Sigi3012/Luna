@@ -19,19 +19,17 @@ from typing import Literal, Optional
 
 config = Config.getMainInstance()
 
-remoteHost: str = "http://127.0.0.1:727"
-secretKey: str = "secret"
-enabled: bool = True
-channel: int = 1224504691686113281
+remoteHost: str = None 
+secretKey: str = None 
+enabled: bool = False 
+channel: int = 0
 
 class _Configuration():
     steps: int = 25
     height: int = 512
     width: int = 512
 
-# TODO 
-# command cooldown (already kinda implemented) 4
-
+# --------- #
 
 class ApiException(Exception):
     def __init__(self, m):
@@ -175,10 +173,8 @@ class Ai(commands.Cog):
         databaseIds = await loadBlacklist()
         # If in local list not in db
         newUsers = [a for a in self.blacklistedUsers if a not in databaseIds]
-        print(f"new users: {newUsers}")
         # If in db not in local list
         removedUsers = [b for b in databaseIds if b not in self.blacklistedUsers]
-        print(f"removed users: {removedUsers}")
 
         for id in newUsers:
             await addToBlacklist(id)
@@ -186,7 +182,7 @@ class Ai(commands.Cog):
         for id in removedUsers:
             await removeFromBlacklist(id)
 
-    @tasks.loop(minutes=15)
+    @tasks.loop(minutes = 30)
     async def blacklistTask(self):
         try:
             await self.handleBlacklist()
@@ -223,7 +219,7 @@ class Ai(commands.Cog):
 
         if interaction.user.id in self.blacklistedUsers:
             await interaction.response.send_message("You are not allowed to use this command", ephemeral = True)
-            print(f"[AI][INFO] A blacklisted user ({interaction.user.id}) tried to generate an image!")
+            print(f"[AI][INFO] A blacklisted user {interaction.user.id} tried to generate an image!")
             return
         
         await interaction.response.send_modal(InputForm())
@@ -261,6 +257,7 @@ class Ai(commands.Cog):
             if option == "False":
                 enabled = False
                 channel = 0
+                
                 try:
                     connector = aiohttp.TCPConnector(family = socket.AF_INET)
                     headers = {
@@ -275,6 +272,7 @@ class Ai(commands.Cog):
                 except aiohttp.ClientConnectionError:
                     # I couldnt figure out how to return and then close the elysiajs server after the reponse so oh well
                     pass
+                
                 await interaction.response.send_message(content = "Successfully disabled", ephemeral = True)
         else:
             await missingPermissions(interaction)
@@ -301,23 +299,6 @@ class Ai(commands.Cog):
         else:
             await missingPermissions(interaction)
         
-            
-    # Testing only will be removed in release
-    @commands.is_owner()
-    @commands.command()
-    async def teststatus(self, ctx: commands.Context):
-        await ctx.reply(f"remote host: {remoteHost}\nsecret key: {secretKey}\nenabled: {enabled}\nchannel: {channel}\nblacklisted users: {self.blacklistedUsers}")
-
-    @commands.command()
-    async def forcesave(self, ctx: commands.Context):
-        await self.handleBlacklist()
-        await ctx.reply("done")
-
-    @commands.command()
-    async def forceload(self, ctx: commands.Context):
-        await ctx.reply(await loadBlacklist())
-    
-
 # --------- #
 
 async def setup(client:commands.Bot) -> None:
