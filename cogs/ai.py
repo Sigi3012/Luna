@@ -4,7 +4,7 @@ from discord.ext import commands, tasks
 
 from main import Config
 from helpers.checks import missingPermissions
-from helpers.database import addToBlacklist, removeFromBlacklist, loadBlacklist
+from helpers.database import checkCooldown, addToBlacklist, removeFromBlacklist, loadBlacklist
 
 import aiohttp
 import socket
@@ -212,6 +212,13 @@ class Ai(commands.Cog):
     async def generateImage(self, interaction: discord.Interaction):
         if interaction.channel_id != channel:
             await interaction.response.send_message("You cannot use that command here!")
+            return
+
+        # Implement this better another time
+        remainingTime = await checkCooldown(interaction.user.id)
+        if remainingTime > 0:
+            remainingTime /= 60
+            await interaction.response.send_message(f"This command is on cooldown, you can use it in {remainingTime:.2f} minutes.", ephemeral=True)
             return
 
         if interaction.user.id in self.blacklistedUsers:
