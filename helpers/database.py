@@ -8,24 +8,31 @@ config = Config.getMainInstance()
 DATABASE = "./persistent/database.db"
 
 async def createTables():
-   async with aiosqlite.connect(DATABASE) as db:
-       # Create cooldown table
-       await db.execute("""
-           CREATE TABLE IF NOT EXISTS cooldown (
-               userID INTEGER NOT NULL,
-               commandTime TIMESTAMP NOT NULL
-           )
-       """)
-       
-       # Create beatmapsets table
-       await db.execute("""
+    async with aiosqlite.connect(DATABASE) as db:
+        # Create cooldown table
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS cooldown (
+                userID INTEGER NOT NULL,
+                commandTime TIMESTAMP NOT NULL
+            )
+        """)
+        
+        # Create beatmapsets table
+        await db.execute("""
             CREATE TABLE IF NOT EXISTS beatmapsets (
                 beatmapsetId INTEGER NOT NULL,
                 statusChangeDate TIMESTAMP
-           )
-       """)
-       
-       await db.commit()
+            )
+        """)
+        
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS aiBlacklist (
+                userId INTEGER NOT NULL,
+                UNIQUE(userId)
+            )
+        """)
+
+        await db.commit()
 
 async def checkCooldown(userId):
    async with aiosqlite.connect(DATABASE) as db:
@@ -113,4 +120,43 @@ async def getAllDatabaseIds():
             return [id[0] for id in ids]
         except Exception as e:
             print(f"[DATABASE][ERROR] Something went wrong while fetching ids\n{e}")
+            return None
+
+async def addToBlacklist(userId: int):
+    async with aiosqlite.connect(DATABASE) as db:
+        cursor = await db.cursor()
+        try:
+            await cursor.execute("INSERT OR IGNORE INTO aiBlacklist VALUES (?)", (userId,))
+        except Exception as e:
+            print(f"[DATABASE][ERROR] Something went wrong while inserting into blacklist\n{e}")
+            return None
+
+        await db.commit()
+        print(f"[DATABASE][INFO] Successfully inserted {userId} into aiBlacklist")
+        return True
+
+async def removeFromBlacklist(userId: int):
+    async with aiosqlite.connect(DATABASE) as db:
+        cursor = await db.cursor()
+        try:
+            await cursor.execute("DELETE FROM aiBlacklist WHERE userId = ?", (userId,))
+        except Exception as e:
+            print(f"[DATABASE][ERROR] Something went wrong while removing from blacklist\n{e}")
+            return None
+
+        await db.commit()
+        print(f"[DATABASE][INFO] Successfully removed {userId} from aiBlacklist")
+        return True
+
+async def loadBlacklist():
+    async with aiosqlite.connect(DATABASE) as db:
+        cursor = await db.cursor()
+        try:
+            selection = await cursor.execute("SELECT * FROM aiBlacklist")
+            ids = await selection.fetchall()
+            ids = [id[0] for id in ids]
+
+            return ids
+        except Exception as e:
+            print(f"[DATABASE][ERROR] Something went wrong while loading ids from blacklist\n{e}")
             return None
