@@ -1,7 +1,7 @@
 FXPATTERN = r'https?://(?:www\.)?(?:twitter\.com|x\.com)/([^/]+)/status/(\d+)(?:/photo/\d)?'
 FXREPLACEMENT = r'https://fxtwitter.com/\1/status/\2'
 DDREELPATTERN = r'https?://(?:www\.)?instagram\.com\/reel\/([a-zA-Z0-9_-]+)(\/\?igshid=[a-zA-Z0-9_-]+)?'
-DDREELREPLACEMENT = r'https://instagramez.com/reel/\1\2'
+DDREELREPLACEMENT = r'https://ddinstagram.com/reel/\1\2'
 DDPOSTPATTERN= r'https://(?:www\.)?instagram\.com/p/([a-zA-Z0-9_-]+)(/\?utm_source=ig_web_copy_link)?'
 DDPOSTREPLACEMENT = r'https://ddinstagram.com/p/\1'
 TTPATTERN = r'https:\/\/(?:www\.|vm\.)?tiktok\.com\/@([^\/]+)\/video\/(\d+)'
