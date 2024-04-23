@@ -11,6 +11,7 @@ services:
       - QUOTECHANNELID=
       - MODCHANNEL=
       - OSUCHANNEL=
+      - CATAPIKEY=
     env_file:
       - .env
     volumes:

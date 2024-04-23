@@ -4,8 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# This is held together with sheer will power and sticky tape 
-# I dont fully understand how it works but it does
+# TODO standardise this and make it less horrible
 
 # --------- #
 
@@ -42,6 +41,7 @@ class Config:
         self.qoutechannelid = os.getenv("QUOTECHANNELID")
         self.modchannel = os.getenv("MODCHANNEL")
         self.osuchannel = os.getenv("OSUCHANNEL")
+        self.catapikey = os.getenv("CATAPIKEY")
 
         self.enabled = data["enabled"]
         self.totalFixed = data["totalFixed"]
@@ -70,3 +70,4 @@ class Config:
 
     def toggle(self):
         self.enabled = not self.enabled
+

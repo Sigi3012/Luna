@@ -106,7 +106,7 @@ class Misc(commands.Cog):
             entry.action.name, entry.user, entry.before, entry.after, entry.target
         )
 
-    @commands.command(aliases = ["gay"])
+    @commands.command()
     async def yuri(self, ctx: commands.Context):
         # 482 is the last page of the tag yuri+2girls, tested via hoppscotch
         pageNumber = randint(1, 482)
@@ -124,6 +124,28 @@ class Misc(commands.Cog):
             else:
                 await ctx.reply("Something went wrong!")
 
+    @commands.command()
+    async def cat(self, ctx: commands.Context):
+        url = f"https://api.thecatapi.com/v1/images/search"
+        headers = {
+            "x-api-key": f"{config.catapikey}",
+                "order": "RAND",
+        }
+        connector = aiohttp.TCPConnector(family = socket.AF_INET)
+
+        async with aiohttp.ClientSession(headers = headers, connector = connector) as session:
+            response = await session.get(url)
+             
+            if response.status == 200:
+                json = await response.json()
+                await ctx.reply(content = json[0]["url"])
+            else:
+                await ctx.reply("Something went wrong!")
+
+
+    @commands.command()
+    async def yaoi(self, ctx: commands.Context):
+        await ctx.reply("haha, no")
 
 # --------- #
 
