@@ -124,10 +124,11 @@ class Misc(commands.Cog):
                 fileUrl = postElement.getAttribute("file_url")
 
                 source = postElement.getAttribute("source")
-                pattern = re.compile(r".*i.pximg.net.*")
+                pximgPattern = re.compile(r".*i.pximg.net.*")
+                pixivPattern = re.compile(r".*i3\.pixiv.net.*")
 
                 # Excludes pixiv's cdn as it doesn't work without http headers
-                if pattern.match(source):
+                if pximgPattern.match(source) or pixivPattern.match(source):
                     await ctx.reply(fileUrl)
                     return
                 else:
