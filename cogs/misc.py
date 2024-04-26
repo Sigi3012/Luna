@@ -1,4 +1,5 @@
 import xml.dom.minidom as xml
+import re
 from datetime import datetime
 from random import randint
 
@@ -120,7 +121,21 @@ class Misc(commands.Cog):
                 XML = await response.text()
                 parsedXML = xml.parseString(XML)
                 postElement = parsedXML.getElementsByTagName("post")[randint(1, 100)]
-                await ctx.reply(postElement.getAttribute("file_url"))
+                fileUrl = postElement.getAttribute("file_url")
+
+                source = postElement.getAttribute("source")
+                pattern = re.compile(r".*i.pximg.net.*")
+
+                # Excludes pixiv's cdn as it doesn't work without http headers
+                if pattern.match(source):
+                    await ctx.reply(fileUrl)
+                    return
+                else:
+                    sourceButton = discord.ui.Button(label = "Original post", url = source)
+                    view = discord.ui.View()
+                    view.add_item(sourceButton)
+
+                    await ctx.reply(content = fileUrl, view = view)
             else:
                 await ctx.reply("Something went wrong!")
 
