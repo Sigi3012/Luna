@@ -96,12 +96,7 @@ class Misc(commands.Cog):
         if config.modchannel == None:
             return
 
-        print("cute and fnny")
-        print(entry.action.name)
-        print(entry.user.global_name)
-        print(entry.before)
-        print(entry.after)
-        print(entry.target)
+        # TODO finish this
 
         await self.buildEmbed(
             entry.action.name, entry.user, entry.before, entry.after, entry.target
