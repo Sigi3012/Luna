@@ -170,21 +170,27 @@ class Maps(commands.Cog):
         
         async def processNewMaps(ids: List[int]):
             for id in ids:
-                data: ApiResponse = await getBeatmap(id)
+                data = await getBeatmap(id)
                 
-                embed = await buildEmbed(data)        
-                await channel.send(embed = embed)
-                
-                await insertBeatmapsetData(data)
+                if isinstance(data, ApiResponse):
+                    embed = await buildEmbed(data)
+                    await channel.send(embed = embed)
+                        
+                    await insertBeatmapsetData(data)
+                else:
+                    print("[TASK][ERROR] Failed to send embed to channel")
         
         async def processChangedMaps(ids: List[int]):
             for id in ids:
-                data: ApiResponse = await getBeatmap(id)
-
-                embed = await buildEmbed(data)
-                await channel.send(embed = embed)
+                data = await getBeatmap(id)
                 
-                await deleteBeatmapEntry(data.beatmapsetId)
+                if isinstance(data, ApiResponse):
+                    embed = await buildEmbed(data)
+                    await channel.send(embed = embed)
+                    
+                    await deleteBeatmapEntry(data.beatmapsetId)
+                else:
+                    print("[TASK][ERROR] Failed to send embed to channel")
 
         await asyncio.gather(
             processNewMaps(newMaps),
@@ -192,37 +198,10 @@ class Maps(commands.Cog):
         )
               
         print("[TASK][INFO] Completed")
-    
-    
-    @app_commands.command(name = "auth", description = "Returns an access token")
-    async def auth(self, interaction: discord.Interaction):
-        if interaction.user.id == int(config.admin):
-            accessToken = await authenticate()
-            await interaction.response.send_message(content = f"```{accessToken}```", ephemeral = True)
-        else:
-            await missingPermissions(interaction)
-    
-    @app_commands.command(name = "populatedb", description = "Inserts current qualified maps")
-    async def getqualified(self, interaction: discord.Interaction):
-        if interaction.user.id == int(config.admin):
-            try:
-                await populateDatabase()
-                await interaction.response.send_message("Successfully populated database with current qualified maps")
-            except Exception:
-                await interaction.response.send_message(f"Something went wrong!")
-        else:
-            await missingPermissions(interaction)
-
-    @app_commands.command(name = "delete", description = "Delete an entry")
-    async def delete(self, interaction: discord.Interaction, id: int):
-        if interaction.user.id == int(config.admin):
-            await deleteBeatmapEntry(id)
-            await interaction.response.send_message(f"Deleted {id} successfully!")
-        else:
-            await missingPermissions(interaction)
-            
+        
+                
     @app_commands.command(name = "mapfeed", description = "Controls for the osu!mapfeed")
-    async def mapfeed(self, interaction: discord.Interaction, option: Literal["Start", "Stop", "Restart", "Force", "Status"]):
+    async def mapfeed(self, interaction: discord.Interaction, option: Literal["Start", "Stop", "Restart", "Force", "Status", "Populate", "Authenticate"]):
         if interaction.user.id == int(config.admin):
             state = self.mapfeedTask.is_running()
             
@@ -257,15 +236,37 @@ class Maps(commands.Cog):
             
             if option == "Status":
                 await interaction.response.send_message(state, ephemeral = True)
+
+            if option == "Populate":
+                try:
+                    await populateDatabase()
+                    await interaction.response.send_message("Successfully populated database with current qualified maps", ephemeral = True)
+                except Exception as e:
+                    await interaction.response.send_message("Something went wrong! Check console", ephemeral = True)
+                    print(e)
+            
+            if option == "Authenticate":
+                accessToken = await authenticate()
+                await interaction.response.send_message(content = f"```{accessToken}```", ephemeral = True)
+
         else:
-            missingPermissions(interaction)
+            await missingPermissions(interaction)
     
     @commands.is_owner()      
     @commands.command()
     async def getmap(self, ctx: commands.Context, id):
         data = await getBeatmap(id)
-        await ctx.reply(data)
-            
+        if data is not None:
+            await ctx.reply(str(data))
+        else:
+            await ctx.reply("Something went wrong!")
+    
+    @commands.is_owner()
+    @commands.command()
+    async def delete(self, ctx: commands.Context, id: int):
+        await deleteBeatmapEntry(id)
+        await ctx.reply(f"Deleted {id} successfully!")
+
 # --------- #
 
 async def setup(client:commands.Bot) -> None:

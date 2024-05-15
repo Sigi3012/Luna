@@ -78,7 +78,79 @@ async def mostCommonMode(modes: List[str]):
         else:
             return result
     except StatisticsError:
-        return None
+        # Something went wrong so just assume osu!std 
+        #TODO change this to display on the embed as none
+        return "standard"
+
+async def dataMapper(mode: int, json: dict) -> Union[List[ApiResponse], ApiResponse]:
+    """
+    Map JSON data to ApiResponse object(s).
+
+    Args:
+        mode (int): The mode of data mapping.
+            1 (int): Maps a beatmap from a list of beatmapsets and inserts into a list.
+                    Endpoint: /api/v2/beatmapsets/search?nsfw=true&s=qualified
+                    Returns a list of ApiResponse objects.
+            2 (int): Maps a singular beatmap.
+                    Endpoint: /api/v2/beatmapsets/{id}
+                    Returns a single ApiResponse object.
+
+        json (dict): The JSON data to be mapped.
+
+    Returns:
+        Union[List[ApiResponse], ApiResponse]: Depending on the mode:
+            - If mode is 1, returns a list of ApiResponse objects.
+            - If mode is 2, returns a single ApiResponse object.
+    """
+    if mode == 1:
+        mappedDataList: List[ApiResponse] = []
+        for beatmapset in json:
+            nested = []
+            for beatmap in beatmapset["beatmaps"]:
+                nest = NestedBeatmap(
+                    starRating = beatmap["difficulty_rating"]
+                )
+                nested.append(nest)
+
+            modes: List[str] = [beatmap["mode"] for beatmap in beatmapset["beatmaps"]]
+             
+            mappedData = ApiResponse(
+                beatmapsetId = beatmapset["id"],
+                title = beatmapset["title"],
+                artist = beatmapset["artist"],
+                mapper = beatmapset["creator"],
+                status = beatmapset["ranked"],
+                submittedDate = beatmapset["submitted_date"],
+                statusChangedDate = beatmapset["ranked_date"],
+                mostCommonMode = await mostCommonMode(modes),
+                beatmaps = nested
+            )
+            mappedDataList.append(mappedData)
+        return mappedDataList
+    elif mode == 2:
+        nested = []
+        for beatmap in json["beatmaps"]:
+            nest = NestedBeatmap(
+                starRating = beatmap["difficulty_rating"]
+            )
+            nested.append(nest)
+        
+        modes: List[str] = [beatmap["mode"] for beatmap in json["beatmaps"]]
+        
+        mappedData = ApiResponse(
+            beatmapsetId = json["id"],
+            title = json["title"],
+            artist = json["artist"],
+            mapper = json["creator"],
+            status = json["ranked"],
+            submittedDate = json["submitted_date"],
+            statusChangedDate = json["ranked_date"],
+            mostCommonMode = await mostCommonMode(modes),
+            beatmaps = nested
+        )
+        return mappedData
+    else:
+        raise ValueError("Invalid mode. Mode must be 1 or 2")
 
 async def getBeatmap(id: int) -> ApiResponse | None:
     print("[API][INFO] Trying to get beatmap information...")
@@ -99,27 +171,12 @@ async def getBeatmap(id: int) -> ApiResponse | None:
                     print("[API][INFO] Successfully got beatmap data")
                     data = await response.json()
                     
-                    nested = []
-                    for beatmap in data["beatmaps"]:
-                        nest = NestedBeatmap(
-                            starRating = beatmap["difficulty_rating"]
-                        )
-                        nested.append(nest)
-                    
-                    mappedData = ApiResponse(
-                        beatmapsetId = data["id"],
-                        title = data["title"],
-                        artist = data["artist"],
-                        mapper = data["creator"],
-                        status = data["ranked"],
-                        submittedDate = data["submitted_date"],
-                        statusChangedDate = data["ranked_date"],
-                        mostCommonMode = await mostCommonMode([beatmap["mode"] for beatmap in data["beatmaps"]]),
-                        beatmaps = nested
-                    )
-                    
-                    return mappedData
-                
+                    mappedData = await dataMapper(2, data)
+                    if isinstance(mappedData, ApiResponse):
+                        return mappedData
+                    else:
+                        # This should quite literally never return None from here but its so my linter shuts up
+                        return None
                 if response.status == 401:
                     print("[API][WARN] HTTP 401, Reauthenticating")
                     await authenticate()
@@ -149,12 +206,16 @@ async def populateDatabase():
                     print("[API][INFO] Successfully got beatmap json")
                     json = await response.json()
                     
-                    from helpers.database import insertBeatmapData
-                    for beatmap in json["beatmapsets"]:
-                        await insertBeatmapData(
-                            beatmap["id"],
-                            beatmap["ranked_date"]
-                        )
+                    # This can't be imported at the top of file because of circular imports
+                    from helpers.database import insertBeatmapsetData
+
+                    # This is of type List[ApiResponse]
+                    maps = await dataMapper(1, json["beatmapsets"])
+                    for m in maps:
+                        if isinstance(m, ApiResponse):
+                            await insertBeatmapsetData(m)
+                        else:
+                            print("[DATABASE][ERROR] Something went wrong")
                     
                     print(json["cursor_string"])
                     return json["cursor_string"]
