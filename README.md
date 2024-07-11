@@ -1,3 +1,10 @@
+> [!NOTE]
+> 
+> This repo will no longer be updated or maintained in favour of my rust rewrite \
+> https://github.com/Sigi3012/Midnight 
+> 
+> Feel free to use this repo as reference for the multitude of confusing discord.py features
+---
 <div align=center>
   <h1>Luna</h1>
     <a href="https://github.com/Sigi3012/EmbedFixer/stargazers" target="_blank">
@@ -7,8 +14,6 @@
     <img alt="license" src="https://img.shields.io/github/license/Sigi3012/EmbedFixer" />
    </a>
 </div>
-
----
 
 A custom made multi-use Discord bot for a private server
 
